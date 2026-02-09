@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FormUI Docs — 01: Все компоненты</title>
+
+  <!-- jQuery + Bootstrap 3 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
+
+  <!-- jQuery UI (datepicker) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/smoothness/jquery-ui.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+
+  <!-- Select2 v3.5.x -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.4/select2.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.4/select2.min.js"></script>
+  <script>
+    // select2 availability check
+    window.__formui_select2_loaded = !!(window.jQuery && jQuery.fn && jQuery.fn.select2);
+  </script>
+
+  <style>
+    body { padding: 18px 0; }
+    .page-title { margin: 0 0 10px; }
+    .hint { color:#666; }
+    .tag { display:inline-block; padding: 2px 8px; background:#eef6ff; border:1px solid #d7e9ff; border-radius: 999px; font-size:12px; margin-right:6px; margin-bottom:4px; }
+    .kbd { display:inline-block; padding: 2px 6px; border:1px solid #ddd; border-bottom-width:2px; border-radius:6px; background:#fff; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+
+    .demo-wrap { background:#fafafa; border:1px solid #eee; border-radius: 10px; padding: 12px; }
+    .demo-actions { margin: 10px 0 0; clear: both; }
+    .demo-actions .btn { margin: 0 6px 6px 0; }
+    .log { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; background:#111; color:#d9ffd9; padding:10px; border-radius:8px; min-height: 90px; white-space: pre-wrap; }
+
+    /* Code view */
+    pre.codeview{
+      background:#0b1020; color:#d7e1ff; border:0; border-radius: 10px;
+      padding: 12px; overflow:auto; position: relative;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    pre.codeview:hover { outline: 2px solid rgba(0,120,255,.15); }
+    pre.codeview .badge-edit{
+      position:absolute; top:10px; right:10px;
+      background:#ffffff; color:#333; border:1px solid #ddd;
+    }
+
+    /* Inline editor */
+    .editor-wrap { display:none; margin-bottom: 10px; }
+    textarea.codebox{
+      width: 100%;
+      min-height: 260px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      border-radius: 10px;
+      border: 1px solid #e5e5e5;
+      padding: 10px;
+      background: #fff;
+    }
+    .editor-actions .btn { margin-right: 6px; margin-bottom: 6px; }
+
+    /* Fix Bootstrap floats inside FormUI rows */
+    .formui-row:before, .formui-row:after { content:" "; display: table; }
+    .formui-row:after { clear: both; }
+    #demoMount { overflow: auto; }
+
+    /* Slot cosmetics */
+    .form-ui-slot-title{ font-weight: 600; margin: 0 0 8px; }
+    .form-ui-slot-body{ padding: 10px; border:1px dashed #ddd; border-radius: 10px; background:#fff; }
+
+    /* Optional: disabled labels */
+    .formui-disabled-label{ opacity: .55; }
+
+    /* Custom widget style in demo */
+    .demo-card{ padding:10px; border:1px solid #e5e5e5; border-radius:10px; background:#fff; }
+    .demo-card strong{ font-size: 13px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+      <h2 class="page-title">FormUI Docs — 01: Все компоненты (accordion, inline edit, v5)</h2>
+      <div class="hint">
+        <span class="tag">Загрузка</span> core → fields → layout → select2 → values → validation → events → helpers → render → modal → facade<br/>
+        <span class="tag">Контракт</span>
+        <span class="kbd">hidden</span>, <span class="kbd">slot.title</span>, <span class="kbd">slot.actions</span>,
+        <span class="kbd">table</span> (QueryTable move), <span class="kbd">validateGroup</span> — зафиксированы<br/>
+        <span class="tag">UX</span> Код показывается как <span class="kbd">&lt;pre&gt;</span>, редактирование — по Edit/клику, Apply обновляет preview, Render demo рендерит слева
+      </div>
+      <hr/>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-7 col-xs-12">
+      <h4>Живое демо</h4>
+      <div class="demo-wrap">
+        <div id="demoMount"></div>
+        <div class="clearfix"></div>
+
+        <div class="demo-actions">
+          <button class="btn btn-primary btn-sm" id="btnGetValues">FormUI.getValues()</button>
+          <button class="btn btn-default btn-sm" id="btnSetValues">FormUI.setValues(sample)</button>
+          <button class="btn btn-default btn-sm" id="btnClearValues">FormUI.clearValues()</button>
+          <button class="btn btn-warning btn-sm" id="btnValidate">FormUI.validate()</button>
+          <button class="btn btn-default btn-sm" id="btnValidateGroup">validateGroup(demoGroup)</button>
+          <button class="btn btn-default btn-sm" id="btnToggleHidden">toggle(hiddenDemo)</button>
+<!--          <button class="btn btn-default btn-sm" id="btnReloadTable">reloadTable()</button>-->
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="hint">Лог (<a href="#" id="linkClearLog">очистить</a>):</div>
+          <div id="log" class="log"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5 col-xs-12">
+      <h4>Как устроена страница</h4>
+      <ul class="hint">
+        <li>Каждая секция аккордеона — один <span class="kbd">type: 'something'</span> (или группа близких типов), с разбором и runnable-примером.</li>
+        <li>Код секции обязан задать: <span class="kbd">fields</span>, <span class="kbd">layout</span>, <span class="kbd">actions</span>, <span class="kbd">options</span></li>
+        <li><span class="kbd">layout.rows</span> не ограничивает набор полей — “rest” дорисовывается автоматически.</li>
+        <li>Для Select2 включай <span class="kbd">options.select2=true</span>.</li>
+        <li><span class="kbd">hidden:true</span> — design-time; runtime: <span class="kbd">FormUI.hide/show/toggle/isVisible</span>.</li>
+<!--        <li>Table runtime: <span class="kbd">FormUI.getTable(code)</span>, <span class="kbd">FormUI.reloadTable(code, params)</span>, <span class="kbd">FormUI.reloadTableByField(container, fieldId)</span>.</li>-->
+      </ul>
+      <div class="hint">Подсказка: сломал пример — жми <span class="kbd">Reset</span> в секции.</div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true"></div>
+</div>
+
+<!-- FormUI modules -->
+<script src="./core.js"></script>
+<script src="./fields.js"></script>
+<script src="./layout.js"></script>
+<script src="./select2.js"></script>
+<script src="./values.js"></script>
+<script src="./validation.js"></script>
+<script src="./events.js"></script>
+<script src="./helpers.js"></script>
+<script src="./render.js"></script>
+<script src="./modal.js"></script>
+<script src="./facade.js"></script>
+
+<script>
+(function(){
+  // -----------------------
+  // 1) Sections (accordion)
+  // -----------------------
+  var SECTIONS = [
+    { n:'00', key:'code_common', title:"Общие принципы: fields / layout / actions / options", open:true },
+    { n:'01', key:'code_text', title:"type: 'text' (и любые input types: text/email/number/date/password...)" },
+    { n:'02', key:'code_textarea', title:"type: 'textarea'" },
+    { n:'03', key:'code_select', title:"type: 'select' (native)" },
+    { n:'04', key:'code_select2', title:"type: 'select2' (Select2 v3.5 на <select>)" },
+    { n:'05', key:'code_select2_ajax', title:"type: 'select2-ajax' (hidden input + Select2 config)" },
+    { n:'06', key:'code_checkbox', title:"type: 'checkbox' (single)" },
+    { n:'07', key:'code_checkboxes', title:"type: 'checkboxes' (group по options)" },
+    { n:'08', key:'code_radios', title:"type: 'radios' (group по options)" },
+    { n:'09', key:'code_button', title:"type: 'button'" },
+    { n:'10', key:'code_label', title:"type: 'label' (read-only display value)" },
+    { n:'11', key:'code_custom', title:"type: 'custom' (рендеришь сам)" },
+    { n:'12', key:'code_slot', title:"type: 'slot' (вложенная сетка + title + actions)" },
+    { n:'13', key:'code_table', title:"type: 'table' (QueryTable mount + move contract)" },
+    { n:'14', key:'code_layout_groups', title:"layout: group / fieldset / EMPTY (верстка)" },
+    { n:'15', key:'code_validation', title:"validation: required / validators / async validator / validateOnBlur" },
+    { n:'16', key:'code_validate_group', title:"validateGroup(groupId): валидация только части формы" },
+    { n:'17', key:'code_values_disable', title:"values: setValues / getValues / setDisable / setDisabled / clearDisabled" },
+    { n:'18', key:'code_events_map', title:"events: field.events = { keyup: fn, ... }" },
+    { n:'19', key:'code_hidden', title:"visibility: hidden (design-time) + runtime hide/show/toggle/isVisible" },
+    { n:'20', key:'code_datetimepicker', title:"type: 'datetimepicker' (jQuery UI datepicker / datetimepicker addon)" },
+    { n:'21', key:'code_modal', title:"modal: FormUI.renderModal / showModal / hideModal" }
+  ];
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function buildPanel(i, sec){
+    var hid = 'h_' + sec.key;
+    var cid = 'c_' + sec.key;
+    var expanded = sec.open ? 'true' : 'false';
+    var inClass = sec.open ? 'in' : '';
+    var html = ''
+      + '<div class="panel panel-default">'
+      +   '<div class="panel-heading" role="tab" id="'+hid+'">'
+      +     '<h4 class="panel-title">'
+      +       '<a role="button" data-toggle="collapse" data-parent="#accordion" href="#'+cid+'" aria-expanded="'+expanded+'">'
+      +         esc(sec.n + '. ' + sec.title)
+      +       '</a>'
+      +     '</h4>'
+      +   '</div>'
+      +   '<div id="'+cid+'" class="panel-collapse collapse '+inClass+'">'
+      +     '<div class="panel-body">'
+      +       '<div class="hint" id="desc_'+sec.key+'" style="margin:0 0 10px"></div>'
+      +       '<pre class="codeview" id="codePreview_'+sec.key+'"><span class="badge badge-edit">Click to edit</span><code id="codeText_'+sec.key+'"></code></pre>'
+      +       '<div class="editor-wrap" id="editor_'+sec.key+'">'
+      +         '<textarea class="codebox" id="codeInput_'+sec.key+'"></textarea>'
+      +         '<div class="editor-actions">'
+      +           '<button class="btn btn-success btn-sm js-apply" data-code="'+sec.key+'">Apply</button>'
+      +           '<button class="btn btn-default btn-sm js-cancel" data-code="'+sec.key+'">Cancel</button>'
+      +           '<button class="btn btn-link btn-sm js-reset" data-code="'+sec.key+'">Reset</button>'
+      +         '</div>'
+      +       '</div>'
+      +       '<div style="margin-top:8px">'
+      +         '<button class="btn btn-default btn-sm js-edit" data-code="'+sec.key+'">Edit</button>'
+      +         '<button class="btn btn-primary btn-sm js-render" data-code="'+sec.key+'">Render demo</button>'
+      +       '</div>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
+    return html;
+  }
+
+  // -----------------------
+  // 2) Default examples
+  // -----------------------
+  var DEFAULTS = {
+    code_common: [
+`// Минимальный runnable каркас: fields/layout/actions/options
+var fields = [
+  { id:'name', label:'Имя', type:'text', required:true },
+  { id:'bio', label:'О себе', type:'textarea', attrs:{rows:3} },
+  { id:'role', label:'Роль', type:'select', options:[
+    {value:'dev', text:'Developer'},
+    {value:'pm',  text:'PM'}
+  ] }
+];
+
+var layout = 2;
+
+// actions — это нижний ряд кнопок, их onClick живёт в DOM (не через jQuery)
+var actions = [
+  { id:'save', text:'Сохранить', class:'btn btn-success',
+    onClick:function(){
+      console.log('save', FormUI.getValues('#demoMount'));
+    }
+  }
+];
+
+// options — поведение
+var options = {
+  select2:true,               // включает select2 attach (если есть поля select2/select2-ajax)
+  bindEvents:true,            // подключает onChange и field.events
+  validateOnBlurFields:['name'],
+  validateOnBlurOptions:{showErrors:true},
+  actionsAlign:'left'
+};`
+    ].join('\n'),
+
+    code_text: [
+`// type:'text' — просто input. На самом деле поддерживаются любые input types:
+var fields = [
+  { id:'email', type:'email', label:'Email', placeholder:'name@site.com', required:true,
+    validators:[ { type:'minLen', value:6, message:'Минимум 6 символов' } ],
+    onChange:function(val){ console.log('email change', val); }
+  },
+  { id:'age', type:'number', label:'Возраст', placeholder:'18', onChange:function(v){ console.log('age', v); } },
+  { id:'pwd', type:'password', label:'Пароль', validators:[ {type:'minLen', value:4} ] },
+  { id:'birth', type:'date', label:'Дата рождения' }
+];
+
+var layout = 2;
+var actions = null;
+var options = { bindEvents:true, select2:true, validateOnBlurFields:['email'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_textarea: [
+`// textarea: attrs.rows, placeholder, value, validators
+var fields = [
+  { id:'msg', type:'textarea', label:'Сообщение', placeholder:'Напишите текст...', attrs:{rows:4},
+    required:true,
+    validators:[ {type:'minLen', value:10, message:'Минимум 10 символов'} ],
+    onChange:function(v){ console.log('msg len', (v||'').length); }
+  }
+];
+
+var layout = 1;
+var actions = null;
+var options = { bindEvents:true, validateOnBlurFields:['msg'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_select: [
+`// select: options[] можно строками или объектами {value,text,selected,attrs}
+var fields = [
+  { id:'city', type:'select', label:'Город', options:[
+    {value:'irk', text:'Иркутск'},
+    {value:'msk', text:'Москва'},
+    {value:'spb', text:'Санкт‑Петербург'}
+  ],
+    onChange:function(v){ console.log('city', v); }
+  }
+];
+
+var layout = 1;
+var actions = null;
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_select2: [
+`// select2: это обычный <select>, но с классом select2 (fields.js добавит его автоматически по type:'select2')
+var fields = [
+  { id:'tags', type:'select2', label:'Теги', attrs:{ multiple:true },
+    options:[
+      {value:'ui', text:'UI'},
+      {value:'js', text:'JavaScript'},
+      {value:'db', text:'PostgreSQL'},
+      {value:'ml', text:'ML'}
+    ],
+    onChange:function(val, data){
+      console.log('select2 tags value=', val, 'data=', data);
+    }
+  }
+];
+
+var layout = 1;
+var actions = [
+  { id:'set2', text:'setValues(tags=[ui,ml])', class:'btn btn-default',
+    onClick:function(){
+      FormUI.setValues('#demoMount', { tags:['ui','ml'] });
+    }
+  }
+];
+var options = { bindEvents:true, select2:true };`
+    ].join('\n'),
+
+    code_select2_ajax: [
+`// select2-ajax
+// Мы демонстрируем реальную конфигурацию FormUI.createAjaxSelect с extraParams.
+//
+
+var formingField = FormUI.createAjaxSelect({
+  id: "forming_payments_id",
+  label: "Настройка",
+
+  queryCode: "cfmgjtqZ",
+  initCode: "cfmgjtqZ",
+  displayProp: "name",
+  placeholder: "Выберите",
+  allowClear: true,
+  minLen: 0,
+
+  afterChange: function (data) {
+    // data = {id, name, ...} или null
+    console.log("afterChange(forming_payments_id)", data);
+  },
+
+  // Любые дополнительные параметры, которые будут добавлены в ajax.data()
+  extraParams: function () {
+    return { enumName: "НастройкаФормированияВыплатПоБанкам" }; };
+  }
+});
+
+// Можно добавлять стандартные свойства FormUI-поля
+formingField.required = true;
+formingField.requiredMessage = "Обязательное поле";
+
+var fields = [ formingField ];
+
+var layout = 1;
+
+var actions = [
+  {
+    id: "setVal",
+    text: "setValues(id=1)",
+    class: "btn btn-default",
+    onClick: function () {
+      FormUI.setValues("#demoMount", { forming_payments_id: {
+  forming_payments_id: { id: "1", name: "DEMO 1", text: "DEMO 1" }
+} });
+    }
+  },
+  {
+    id: "clearVal",
+    text: "clear",
+    class: "btn btn-default",
+    onClick: function () {
+      FormUI.setValues("#demoMount", { forming_payments_id: null });
+    }
+  }
+];
+
+var options = { bindEvents: true, select2: true };`
+    ].join('\n'),
+
+    code_checkbox: [
+`// checkbox: значение возвращается boolean, setValues тоже boolean
+var fields = [
+  { id:'agree', type:'checkbox', label:'Я согласен(на)', checked:false,
+    onChange:function(v){ console.log('agree', v); }
+  }
+];
+
+var layout = 1;
+var actions = [
+  { id:'check', text:'setValues(agree=true)', class:'btn btn-default',
+    onClick:function(){ FormUI.setValues('#demoMount', { agree:true }); }
+  },
+  { id:'uncheck', text:'setValues(agree=false)', class:'btn btn-default',
+    onClick:function(){ FormUI.setValues('#demoMount', { agree:false }); }
+  }
+];
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_checkboxes: [
+`// checkboxes (group): набор чекбоксов формируется по options.
+// В DOM каждый input получает data-formui-group="<field.id>" и свой value.
+// getValues -> массив выбранных значений.
+// setValues -> массив значений.
+var fields = [
+  {
+    id:'langs',
+    type:'checkboxes',
+    label:'Языки',
+    direction:'row',           // row|column
+    options:[
+      {value:'ru', text:'Русский'},
+      {value:'en', text:'English'},
+      {value:'de', text:'Deutsch'}
+    ],
+    value:['ru','en'],
+    onChange:function(v){ console.log('langs', v); }
+  }
+];
+
+var layout = 1;
+var actions = [
+  { id:'setRU', text:'setValues([ru])', class:'btn btn-default',
+    onClick:function(){ FormUI.setValues('#demoMount', { langs:['ru'] }); }
+  },
+  { id:'setAll', text:'setValues([ru,en,de])', class:'btn btn-default',
+    onClick:function(){ FormUI.setValues('#demoMount', { langs:['ru','en','de'] }); }
+  }
+];
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_radios: [
+`// radios (group): набор radio формируется по options.
+// getValues -> одно значение (string) или null
+// setValues -> строка
+var fields = [
+  {
+    id:'paymentType',
+    type:'radios',
+    label:'Тип оплаты',
+    direction:'row',
+    options:[
+      { value:'card', text:'Карта' },
+      { value:'cash', text:'Наличные' },
+      { value:'sbp',  text:'СБП' }
+    ],
+    value:'card',
+    onChange:function(v){ console.log('paymentType', v); }
+  }
+];
+
+var layout = 1;
+var actions = [
+  { id:'setCash', text:'setValues(cash)', class:'btn btn-default',
+    onClick:function(){ FormUI.setValues('#demoMount', { paymentType:'cash' }); }
+  }
+];
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_button: [
+`// button: просто DOM-кнопка внутри сетки
+var fields = [
+  { id:'note', type:'text', label:'Заметка', placeholder:'...' },
+  { id:'btnHello', type:'button', text:'Сказать привет', btnClass:'btn btn-info',
+    onChange:function(){ /* не применяется */ }
+  }
+];
+
+var layout = 2;
+var actions = null;
+
+var options = { bindEvents:true };
+
+// Кнопки типа 'button' удобно оживлять через обычный DOM onclick в attrs:
+fields[1].attrs = {
+  onclick:function(){
+    console.log('hello from field button', FormUI.getValues('#demoMount'));
+  }
+};`
+    ].join('\n'),
+
+    code_label: [
+`// label: read-only отображение.
+// fields.js рендерит: <div id=...><span id="<id>__value">...</span></div>
+// values.js умеет обновлять "<id>__value" через setValues().
+var fields = [
+  { id:'status', type:'label', label:'Статус', value:'NEW' },
+  { id:'note', type:'text', label:'Комментарий' }
+];
+
+var layout = 1;
+var actions = [
+  { id:'setOk', text:"setValues(status='OK')", class:'btn btn-default',
+    onClick:function(){ FormUI.setValues('#demoMount', { status:'OK' }); }
+  },
+  { id:'setObj', text:"setValues(status={text,color})", class:'btn btn-default',
+    onClick:function(){ FormUI.setValues('#demoMount', { status:{ text:'WARN', color:'#d58512' } }); }
+  }
+];
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_custom: [
+`// custom: ты сам возвращаешь DOM (или строку/фрагмент) из render(field, ctx)
+// Если возвращаешь DOM-элемент без id — FormUI добавит id автоматически (если field.id задан).
+var fields = [
+  { id:'customCard', type:'custom', label:'(no label)',
+    render:function(field, ctx){
+      var box = document.createElement('div');
+      box.className = 'demo-card';
+      box.innerHTML =
+        '<strong>Custom widget</strong><div class="hint">Можно рисовать что угодно.</div>' +
+        '<div style="margin-top:6px"><button type="button" class="btn btn-xs btn-default" id="btnInside">Inner button</button></div>';
+      return box;
+    }
+  },
+  { id:'name2', type:'text', label:'Имя (обычное поле рядом)' }
+];
+
+var layout = 1;
+var actions = [
+  { id:'updateCustom', text:'setValues(customCard={text})', class:'btn btn-default',
+    onClick:function(){
+      // values.js умеет обновлять non-input элементы:
+      //  - string -> textContent
+      //  - {text, html, class, style, color} -> применяет
+      FormUI.setValues('#demoMount', { customCard:{ html:'<strong>Updated</strong><div class="hint">HTML обновлён через setValues</div>' } });
+    }
+  }
+];
+
+var options = { bindEvents:true };
+
+// После render — можно навесить обычные обработчики на элементы внутри кастомного DOM:
+setTimeout(function(){
+  var b = document.getElementById('btnInside');
+  if(b) b.onclick = function(){ console.log('inside custom clicked'); };
+}, 0);`
+    ].join('\n'),
+
+    code_slot: [
+`// slot: вложенная сетка FormUI внутри одной "ячейки".
+// Важно: если указан title — он ВСЕГДА рендерится над содержимым. label для slot не используется.
+// slot поддерживает actions внутри себя и actionsAlign (только внутри слота).
+
+var fields = [
+  { id:'outerA', type:'text', label:'Снаружи A' },
+
+  {
+    id:'slotDemo',
+    type:'slot',
+    title:'Слот: реквизиты',
+    fields:[
+      { id:'inn', type:'text', label:'ИНН', placeholder:'10 цифр', required:true,
+        validators:[{type:'minLen', value:10, message:'ИНН 10 символов'}]
+      },
+      { id:'kpp', type:'text', label:'КПП', placeholder:'9 цифр' }
+    ],
+    layout: 2,
+    actionsAlign:'right',
+    actions:[
+      { id:'slotFill', text:'Заполнить', class:'btn btn-xs btn-default',
+        onClick:function(){ FormUI.setValues('#demoMount', { inn:'1234567890', kpp:'987654321' }); }
+      },
+      { id:'slotHideKpp', text:'toggle(kpp)', class:'btn btn-xs btn-default',
+        onClick:function(){ FormUI.toggle('#demoMount','kpp'); }
+      }
+    ]
+  },
+
+  { id:'outerB', type:'text', label:'Снаружи B' }
+];
+
+var layout = 1;
+var actions = null;
+var options = { bindEvents:true, validateOnBlurFields:['inn'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_table: [
+`// table: интеграция с QueryTable через mount .form-ui-table-mount
+// Если QueryTable не подключён — виджет просто остаётся пустым.
+var fields = [
+  { id:'q', type:'text', label:'Поиск', placeholder:'...' },
+  {
+    id:'ordersTable',
+    type:'table',
+    title:'Заказы',
+    table:{
+      jspParams:{ queryTableCode:'ORDERS_DEMO' },
+      callbacks:{},
+      data:function(){
+        // любые параметры, которые QueryTable подхватит при reload()
+        return { q: FormUI.getValues('#demoMount').q || '' };
+      },
+      options:{}
+    }
+  }
+];
+
+var layout = 1;
+
+var actions = [
+  { id:'reload', text:'reloadTable(ORDERS_DEMO)', class:'btn btn-default',
+    onClick:function(){ FormUI.reloadTable('ORDERS_DEMO', { q: FormUI.getValues('#demoMount').q }); }
+  }
+];
+
+var options = { bindEvents:true, select2:true };`
+    ].join('\n'),
+
+    code_layout_groups: [
+`// layout: group / fieldset / EMPTY
+// Идея: layout.rows описывает сетку и "карманы" группировки.
+// Остальные поля ("rest") дорисуются в конце автоматически.
+
+var fields = [
+  { id:'a1', type:'text', label:'A1' },
+  { id:'a2', type:'text', label:'A2' },
+  { id:'b1', type:'text', label:'B1' },
+  { id:'b2', type:'text', label:'B2' },
+  { id:'rest1', type:'text', label:'Rest 1' },
+  { id:'rest2', type:'text', label:'Rest 2' }
+];
+
+var layout = {
+  rows:[
+    { type:'group', id:'demoGroup', class:'panel panel-default', rows:[
+      2,
+      // Можно вставить пустую ячейку через FormUI.EMPTY:
+      ['a1', FormUI.EMPTY]
+    ]},
+    { type:'fieldset', id:'fs1', legend:'Fieldset: блок B', rows:[
+      ['b1','b2']
+    ]}
+  ]
+};
+
+var actions = [
+  { id:'validateOnlyGroup', text:'validateGroup(demoGroup)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validateGroup('#demoMount', FormUI.Fields.flatten(fields), 'demoGroup', {showErrors:true})
+        .then(function(r){ console.log('validateGroup', r); });
+    }
+  }
+];
+
+var options = { bindEvents:true, validateOnBlurFields:['a1'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_validation: [
+`// validation: required + validators + async validator
+FormUI.registerValidator('startsWith', function(value, ctx, params){
+  if(value==null || value==='') return true;
+  var s = String(value);
+  var pref = (params && params.value) ? String(params.value) : '';
+  return s.indexOf(pref) === 0 || (params && params.message) || ('Должно начинаться с: ' + pref);
+});
+
+// async пример: имитация проверки "email занят"
+function asyncEmailCheck(value){
+  return new Promise(function(resolve){
+    setTimeout(function(){
+      if(String(value||'').toLowerCase() === 'taken@example.com') resolve('Этот email уже занят');
+      else resolve(true);
+    }, 250);
+  });
+}
+
+var fields = [
+  { id:'req', type:'text', label:'Обязательное', required:true },
+  { id:'minmax', type:'text', label:'minLen/maxLen', validators:[
+    {type:'minLen', value:3},
+    {type:'maxLen', value:6}
+  ]},
+  { id:'pref', type:'text', label:"custom validator: startsWith('A')", validators:[
+    {type:'startsWith', value:'A', message:"Должно начинаться с 'A'"}
+  ]},
+  { id:'email2', type:'email', label:'Async email', required:true, validators:[
+    function(v){ return asyncEmailCheck(v); }
+  ]}
+];
+
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true, stopOnFirstError:true})
+        .then(function(r){ console.log('validate result', r); });
+    }
+  }
+];
+
+// validateOnBlurFields — подсветка на blur, не дожидаясь validate()
+var options = { bindEvents:true, validateOnBlurFields:['req','email2'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_validate_group: [
+`// validateGroup: проверяем только часть формы (group container id)
+// Сама группа задаётся в layout: {type:'group', id:'demoGroup', rows:[ ... ]}
+var fields = [
+  { id:'g1', type:'text', label:'В группе (required)', required:true },
+  { id:'g2', type:'text', label:'В группе (minLen=3)', validators:[{type:'minLen', value:3}] },
+  { id:'x1', type:'text', label:'Снаружи (не валидируем)', required:true, value:'' }
+];
+
+var layout = {
+  rows:[
+    { type:'group', id:'demoGroup', class:'panel panel-default', rows:[
+      1,
+      ['g2']
+    ]}
+  ]
+};
+
+var actions = [
+  { id:'validateGroupBtn', text:'validateGroup(demoGroup)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validateGroup('#demoMount', FormUI.Fields.flatten(fields), 'demoGroup', {showErrors:true})
+        .then(function(r){ console.log('validateGroup', r); });
+    }
+  }
+];
+
+var options = { bindEvents:true, validateOnBlurFields:['g1','g2'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_values_disable: [
+`// values: getValues / setValues / clearValues уже в верхних кнопках страницы.
+// Здесь — управление disabled (single + bulk).
+var fields = [
+  { id:'d1', type:'text', label:'Поле 1' },
+  { id:'d2', type:'select', label:'Поле 2 (select)', options:['A','B','C'] },
+  { id:'d3', type:'checkbox', label:'Поле 3 (checkbox)' }
+];
+
+var layout = 1;
+var actions = [
+  { id:'dis1', text:'setDisable(d1,true)', class:'btn btn-default',
+    onClick:function(){ FormUI.setDisable('#demoMount','d1', true); }
+  },
+  { id:'en1', text:'setDisable(d1,false)', class:'btn btn-default',
+    onClick:function(){ FormUI.setDisable('#demoMount','d1', false); }
+  },
+  { id:'bulk', text:'setDisabled({d2:true,d3:true})', class:'btn btn-default',
+    onClick:function(){ FormUI.setDisabled('#demoMount', {d2:true, d3:true}); }
+  },
+  { id:'clearDis', text:'clearDisabled()', class:'btn btn-default',
+    onClick:function(){ FormUI.clearDisabled('#demoMount'); }
+  }
+];
+
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_events_map: [
+`// events: field.events = { keyup: fn, ... }
+// fn signature: (event, value, select2Data, field)
+var fields = [
+  {
+    id:'live',
+    type:'text',
+    label:'Live input (keyup)',
+    events:{
+      keyup:function(e, value){
+        console.log('keyup value=', value);
+      }
+    }
+  },
+  {
+    id:'live2',
+    type:'textarea',
+    label:'Textarea (keyup)',
+    attrs:{rows:3},
+    events:{
+      keyup:function(e, value){
+        console.log('keyup len=', (value||'').length);
+      }
+    }
+  }
+];
+
+var layout = 1;
+var actions = null;
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_hidden: [
+`// hidden:true — design-time: render.js после Layout.render() вызовет Helpers.hide(container, id)
+// runtime: hide/show/toggle/isVisible
+var fields = [
+  { id:'hiddenDemo', label:'A (hidden:true)', type:'text', hidden:true, value:'secret' },
+  { id:'b', label:'B', type:'text', value:'visible' },
+  { id:'c', label:'C', type:'text', value:'toggle me' }
+];
+
+var layout = 1;
+
+var actions = [
+  { id:'showA', text:'show(hiddenDemo)', class:'btn btn-default',
+    onClick:function(){ FormUI.show('#demoMount','hiddenDemo'); } },
+  { id:'hideB', text:'hide(b)', class:'btn btn-default',
+    onClick:function(){ FormUI.hide('#demoMount','b'); } },
+  { id:'toggleC', text:'toggle(c)', class:'btn btn-default',
+    onClick:function(){ FormUI.toggle('#demoMount','c'); } },
+  { id:'isVis', text:'isVisible(hiddenDemo)?', class:'btn btn-default',
+    onClick:function(){ console.log('hiddenDemo visible=', FormUI.isVisible('#demoMount','hiddenDemo')); } }
+];
+
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_datetimepicker: [
+`// datetimepicker: FormUI field на базе jQuery UI.
+// Важно: "из коробки" jQuery UI даёт datepicker.
+// Если на странице подключён datetimepicker addon ($.fn.datetimepicker),
+// FormUI.Helpers.attachDateTimePickers использует его автоматически, иначе — datepicker.
+//
+// Поле: type:'datetimepicker' + опции в field.datetimepicker (прокидываются в плагин).
+// События:
+//  - FormUI.onChange / field.events.change срабатывают, потому что onSelect/onClose триггерят 'change'.
+//
+// Пример включает разные сценарии: required, min/max date, локаль/формат, кнопки и runtime API.
+
+function log(m){
+  try { console.log(m); } catch(e){}
+}
+
+var fields = [
+  {
+    id:'d1',
+    type:'datetimepicker',
+    label:'Базовый datepicker',
+    placeholder:'dd.mm.yyyy',
+    datetimepicker:{
+      dateFormat:'dd.mm.yy',
+      changeMonth:true,
+      changeYear:true,
+      showButtonPanel:true
+    },
+    onChange:function(val){
+      log('d1 change: ' + val);
+    }
+  },
+  {
+    id:'d2',
+    type:'datetimepicker',
+    label:'Required + minLen(10) (пустое не проходит)',
+    required:true,
+    validators:[
+      { type:'minLen', value:10, message:'Заполните дату полностью (10 символов)' }
+    ],
+    datetimepicker:{
+      dateFormat:'dd.mm.yy',
+      changeMonth:true,
+      changeYear:true
+    }
+  },
+  {
+    id:'d3',
+    type:'datetimepicker',
+    label:'Ограничение диапазона (min/maxDate)',
+    datetimepicker:{
+      dateFormat:'dd.mm.yy',
+      minDate:-7,     // 7 дней назад
+      maxDate:+30,    // 30 дней вперёд
+      showOtherMonths:true,
+      selectOtherMonths:true
+    }
+  },
+  {
+    id:'d4',
+    type:'datetimepicker',
+    label:'Календарь с Week-end подсветкой',
+    datetimepicker:{
+      dateFormat:'dd.mm.yy',
+      beforeShowDay:function(date){
+        var day = date.getDay(); // 0=Sun .. 6=Sat
+        if(day===0 || day===6) return [true, 'ui-state-highlight', 'Weekend'];
+        return [true, '', ''];
+      }
+    }
+  },
+
+  // runtime hide/show demo
+  {
+    id:'slotDates',
+    type:'slot',
+    title:'Слот: дополнительные даты (можно скрывать/показывать)',
+    layout: 2,
+    fields:[
+      { id:'d5', type:'datetimepicker', label:'Доп. дата 1', datetimepicker:{ dateFormat:'dd.mm.yy' } },
+      { id:'d6', type:'datetimepicker', label:'Доп. дата 2', datetimepicker:{ dateFormat:'dd.mm.yy' } }
+    ],
+    actionsAlign:'right',
+    actions:[
+      { id:'fillDates', text:'Заполнить даты', class:'btn btn-xs btn-default',
+        onClick:function(){
+          FormUI.setValues('#demoMount', { d5:'01.02.2026', d6:'15.02.2026' });
+        }
+      },
+      { id:'toggleSlot', text:'toggle(slotDates)', class:'btn btn-xs btn-default',
+        onClick:function(){ FormUI.toggle('#demoMount','slotDates'); }
+      }
+    ]
+  }
+];
+
+var layout = 2;
+
+var actions = [
+  { id:'setNow', text:'setValues(d1=сегодня)', class:'btn btn-default',
+    onClick:function(){
+      // просто строкой в формате dateFormat
+      var now = new Date();
+      var dd = ('0'+now.getDate()).slice(-2);
+      var mm = ('0'+(now.getMonth()+1)).slice(-2);
+      var yy = now.getFullYear();
+      FormUI.setValues('#demoMount', { d1: dd+'.'+mm+'.'+yy });
+    }
+  },
+  { id:'clear', text:'clearValues()', class:'btn btn-default',
+    onClick:function(){ FormUI.clearValues('#demoMount'); }
+  },
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log('validate result', r); });
+    }
+  }
+];
+
+var options = {
+  bindEvents:true,
+  validateOnBlurFields:['d2'],
+  validateOnBlurOptions:{showErrors:true}
+};`
+    ].join('\n'),
+
+    code_modal: [
+`// modal: requires jQuery + Bootstrap modal plugin ($.fn.modal)
+// Новое API (modal.updated.js):
+//   FormUI.Modal.open(cfg[, ctx])                 — единая точка (create/update + render + optional show)
+//   FormUI.renderModal(cfg, renderFn[, ctx])      — совместимо со старым API (show=false)
+//   FormUI.showModal(modalId)                     — показать уже созданную
+//   FormUI.renderDataModal(cfg, data, formCfg)    — сгенерировать форму из data (show=false)
+//   FormUI.showDataModal(cfg, data, formCfg)      — то же + show=true
+//
+// Идея data-mode: передаём data={field1:'111', field2:'222'} и получаем форму (пока type:'text') автоматически.
+// Доп. настройки полей: formCfg.fieldsOptions = { labels, types, attrs, extra, skip }
+
+var cfg = {
+  modalId:'demoModal',
+  title:function(){ return 'FormUI Modal — open/renderData'; },
+  size:'lg',
+  body:{ mountId:'demoModal_body', asForm:true },
+  footer:[
+    { id:'mClose', text:'Закрыть', class:'btn btn-default', attrs:{'data-dismiss':'modal'} },
+    { id:'mLog', text:'Log values', class:'btn btn-primary',
+      onClick:function(e, modalEl){
+        console.log('modal values', FormUI.getValues('#demoModal_body'));
+      }
+    }
+  ]
+};
+
+// 1) Кнопка: открыть "ручной" модал-рендер через renderModal + showModal (как раньше)
+function openManual(){
+  FormUI.renderModal(cfg, function(mountSel){
+    var fields = [
+      { id:'mName', type:'text', label:'Имя', required:true },
+      { id:'mRole', type:'select', label:'Роль', options:['Dev','PM'] }
+    ];
+    var layout = 1;
+    var actions = null;
+    var options = { bindEvents:true };
+    FormUI.render(mountSel, fields, layout, actions, options, 'md');
+    FormUI.setValues(mountSel, { mName:'Paul', mRole:'Dev' });
+  });
+  FormUI.showModal('demoModal');
+}
+
+// 2) Кнопка: открыть data-mode (форма генерируется из объекта)
+function openFromData(){
+  var data = { field1:'111', field2:'222', email:'user@test.com', age:21 };
+
+  FormUI.showDataModal(
+    cfg,
+    data,
+    {
+      // layout внутри модалки
+      layout: 2,
+
+      // настройка генерации полей
+      fieldsOptions:{
+        labels:{ field1:'Поле 1', field2:'Поле 2', email:'E-mail', age:'Возраст' },
+        types:{ email:'email', age:'number' },
+        attrs:{ age:{ min:0, max:120 } },
+        extra:{
+          email:{ required:true, validators:[{type:'email', message:'Некорректный email'}], placeholder:'name@example.com' },
+          age:{ validators:[{type:'min', value:18, message:'18+'}] }
+        }
+      },
+
+      // render options (select2/bindEvents/validateOnBlur...)
+      renderOptions:{ bindEvents:true, validateOnBlurFields:['email'], validateOnBlurOptions:{showErrors:true} }
+    }
+  );
+}
+
+var fields = [
+  { id:'openManual', type:'button', text:'Открыть модалку (manual)', btnClass:'btn btn-success' },
+  { id:'openData', type:'button', text:'Открыть модалку (data-mode)', btnClass:'btn btn-primary' }
+];
+
+fields[0].attrs = { onclick: openManual };
+fields[1].attrs = { onclick: openFromData };
+
+var layout = 1;
+var actions = null;
+var options = { bindEvents:true };`
+    ].join('\n')
+  };
+
+  // descriptions shown above code
+  var DESCR = {
+    code_common:
+      '<div><span class="tag">Минимум</span> fields/layout/actions/options + render. Тут же видны required/validateOnBlur.</div>',
+    code_text:
+      '<div class="hint"><b>Поддержка:</b> любые input types (по сути, всё кроме спец-типов). ' +
+      'Используй <span class="kbd">placeholder</span>, <span class="kbd">attrs</span>, <span class="kbd">validators</span>, <span class="kbd">onChange</span>.</div>',
+    code_textarea:
+      '<div class="hint">Textarea — как input, плюс <span class="kbd">attrs:{rows:n}</span>.</div>',
+    code_select:
+      '<div class="hint">Native select: <span class="kbd">options</span> = строки или {value,text,selected,attrs}.</div>',
+    code_select2:
+      '<div class="hint">Select2 v3.5: включи <span class="kbd">options.select2=true</span>. Для multiple: <span class="kbd">attrs:{multiple:true}</span>.</div>',
+    code_select2_ajax:
+      '<div class="hint"><b>select2-ajax</b> — это hidden input, а поведение задаётся <span class="kbd">field.select2</span>. ' +
+      'В проде часто используют <span class="kbd">FormUI.createAjaxSelect</span> (ajax на сервер). Здесь runnable-версия через <span class="kbd">query</span>.</div>',
+    code_checkbox:
+      '<div class="hint">Single checkbox: getValues -> boolean, setValues -> boolean.</div>',
+    code_checkboxes:
+      '<div class="hint">Group checkboxes: getValues -> массив значений, setValues -> массив. DOM связывание через <span class="kbd">data-formui-group</span>.</div>',
+    code_radios:
+      '<div class="hint">Group radios: getValues -> одно значение (string) или null, setValues -> string.</div>',
+    code_button:
+      '<div class="hint">type:button — просто кнопка в сетке. Удобно задавать <span class="kbd">attrs.onclick</span>.</div>',
+    code_label:
+      '<div class="hint">Read-only: обновляется через <span class="kbd">setValues({id:...})</span> (внутри используется узел <span class="kbd">id__value</span>).</div>',
+    code_custom:
+      '<div class="hint">Custom renderer: <span class="kbd">render(field, ctx)</span> возвращает DOM/текст. '+
+      'setValues умеет обновлять non-input элементы (text/html/class/style/color).</div>',
+    code_slot:
+      '<div class="hint">Slot = вложенная сетка. Заголовок — <span class="kbd">title</span>. ' +
+      'Внутри — свои <span class="kbd">actions</span> и <span class="kbd">actionsAlign</span>.</div>',
+    code_table:
+      '<div class="hint">Table = QueryTable mount. При наличии QueryTable — move DOM и init один раз (избежать DataTables reinit).</div>',
+    code_layout_groups:
+      '<div class="hint">layout.rows: числа (N колонок), массивы id, группы и fieldset. ' +
+      'EMPTY: <span class="kbd">FormUI.EMPTY</span> создаёт пустую ячейку.</div>',
+    code_validation:
+      '<div class="hint">required + validators (sync/async). ' +
+      'validateOnBlur показывает ошибки при уходе с поля.</div>',
+    code_validate_group:
+      '<div class="hint">validateGroup(container, fields, groupId): валидирует только поля внутри DOM-группы.</div>',
+    code_values_disable:
+      '<div class="hint">setDisable — одиночное поле/группа. setDisabled — bulk. clearDisabled — включить всё обратно.</div>',
+    code_events_map:
+      '<div class="hint">field.events: мапа событий, полезно для keyup/keydown/input и т.д.</div>',
+    code_hidden:
+      '<div class="hint">hidden:true скрывает bootstrap-колонку (label+control). Runtime: hide/show/toggle/isVisible.</div>',
+    code_modal:
+      '<div class="hint"><b>Modal</b>: единое API <span class="kbd">FormUI.Modal.open</span> + обёртки <span class="kbd">renderModal/showModal</span> (backward compat) и <span class="kbd">renderDataModal/showDataModal</span> (генерация формы из <span class="kbd">data</span>). Поддерживаются <span class="kbd">fieldsOptions.labels/types/attrs/extra/skip</span> для настройки сгенерированных полей.</div>'
+  };
+
+  // ------------------------------------
+  // 3) Inline editor + render orchestrator
+  // ------------------------------------
+  var current = {};
+  Object.keys(DEFAULTS).forEach(function(k){ current[k]=DEFAULTS[k]; });
+
+  // Build panels
+  var $acc = jQuery('#accordion');
+  SECTIONS.forEach(function(sec, idx){
+    $acc.append(buildPanel(idx, sec));
+  });
+
+  // Fill descriptions and previews
+  SECTIONS.forEach(function(sec){
+    var key = sec.key;
+    jQuery('#desc_'+key).html(DESCR[key] || '');
+    refreshPreview(key);
+  });
+
+  var $log = jQuery('#log');
+  function log(){
+    var s = Array.prototype.slice.call(arguments).map(function(x){
+      try { return (typeof x === 'string') ? x : JSON.stringify(x, null, 2); }
+      catch(e){ return String(x); }
+    }).join(' ');
+    $log.text(($log.text() ? ($log.text() + "\n") : "") + s);
+    $log.scrollTop($log[0].scrollHeight);
+  }
+
+  function compileExample(code){
+    var fn = new Function('FormUI','jQuery','$','"use strict";\n'+
+      'var fields=null, layout=1, actions=null, options={select2:true, bindEvents:true};\n'+
+      code+'\n'+
+      'return {fields:fields, layout:layout, actions:actions, options:options};'
+    );
+    return fn(window.FormUI, window.jQuery, window.jQuery);
+  }
+
+  function renderFromKey(key){
+    var code = current[key];
+    var mount = '#demoMount';
+    var ex = compileExample(code);
+    if(!ex || !Array.isArray(ex.fields)) throw new Error('Example must define: var fields = [ ... ];');
+    FormUI.render(mount, ex.fields, ex.layout || 1, ex.actions || null, ex.options || {}, 'md');
+    log('[render]', key);
+  }
+
+  function refreshPreview(key){
+    jQuery('#codeText_'+key).text(current[key]||'');
+  }
+
+  function openEditor(key){
+    jQuery('#codeInput_'+key).val(current[key]||'');
+    jQuery('#editor_'+key).slideDown(120);
+    setTimeout(function(){ var el=jQuery('#codeInput_'+key)[0]; if(el) el.focus(); },0);
+  }
+
+  function closeEditor(key){
+    jQuery('#editor_'+key).slideUp(120);
+  }
+
+  // Click on pre opens editor
+  jQuery(document).on('click','pre.codeview',function(){
+    var id=jQuery(this).attr('id')||'';
+    var key=id.replace('codePreview_','');
+    if(DEFAULTS[key]!=null) openEditor(key);
+  });
+
+  jQuery(document).on('click','.js-edit',function(){ openEditor(jQuery(this).data('code')); });
+  jQuery(document).on('click','.js-apply',function(){
+    var key=jQuery(this).data('code');
+    current[key]=jQuery('#codeInput_'+key).val();
+    refreshPreview(key); closeEditor(key); log('[apply]',key);
+  });
+  jQuery(document).on('click','.js-cancel',function(){
+    closeEditor(jQuery(this).data('code')); log('[cancel]');
+  });
+  jQuery(document).on('click','.js-reset',function(e){
+    e.preventDefault();
+    var key=jQuery(this).data('code');
+    current[key]=DEFAULTS[key]||'';
+    refreshPreview(key);
+    jQuery('#codeInput_'+key).val(current[key]);
+    log('[reset]',key);
+  });
+  jQuery(document).on('click','.js-render',function(){
+    var key=jQuery(this).data('code');
+    try{ renderFromKey(key); }catch(e){ log('[error]',key,e.message||String(e)); }
+  });
+
+  // Top actions
+  jQuery('#btnGetValues').on('click',function(){ log('getValues:', FormUI.getValues('#demoMount')); });
+  jQuery('#btnSetValues').on('click',function(){
+    FormUI.setValues('#demoMount',{
+      name:'Paul', bio:'Some text...', role:'pm',
+      email:'test@example.com', age:33, pwd:'1234',
+      msg:'Hello from textarea',
+      city:'irk',
+      tags:['ui','ml'],
+      userId:{id:'4', text:'Paul'},
+      agree:true,
+      langs:['ru','en'],
+      paymentType:'sbp',
+      status:{text:'OK', color:'#3c763d'},
+      req:'X',
+      minmax:'abcd',
+      pref:'A123',
+      email2:'free@example.com',
+      g1:'ok', g2:'abc',
+      d1:'x', d2:'B', d3:true,
+      live:'typing...',
+      hiddenDemo:'secret', b:'visible', c:'toggle me',
+      mName:'Paul', mRole:'Dev'
+    });
+    log('setValues(sample) done');
+  });
+  jQuery('#btnClearValues').on('click',function(){ FormUI.clearValues('#demoMount'); log('clearValues done'); });
+  jQuery('#btnValidate').on('click',function(){
+    var vals=FormUI.getValues('#demoMount');
+    var f=Object.keys(vals).map(function(id){ return {id:id}; });
+    FormUI.validate('#demoMount',f,{showErrors:true}).then(function(res){ log('validate result:',res); });
+  });
+  jQuery('#btnValidateGroup').on('click',function(){
+    try{
+      var all = FormUI.Fields && FormUI.Fields.flatten ? FormUI.Fields.flatten([]) : [];
+      // best-effort: attempt validateGroup for 'demoGroup' if current demo has it
+      var root = document.querySelector('#demoMount');
+      var has = root && root.querySelector('#demoGroup');
+      if(!has){ log('validateGroup: demoGroup not present in current demo'); return; }
+
+      // We don't have access to example fields here; validateGroup needs fields list.
+      // In docs examples we call validateGroup from actions with correct fields.
+      FormUI.validateGroup('#demoMount', [], 'demoGroup', {showErrors:true})
+        .then(function(r){ log('validateGroup result (needs fields list):', r); });
+    }catch(e){ log('validateGroup error', e.message||String(e)); }
+  });
+  jQuery('#btnToggleHidden').on('click',function(){
+    try{
+      if(FormUI.toggle) FormUI.toggle('#demoMount','hiddenDemo');
+      log('toggle(hiddenDemo)');
+    }catch(e){ log('toggle error', e.message||String(e)); }
+  });
+  /*
+  jQuery('#btnReloadTable').on('click',function(){
+    if(FormUI.Table && FormUI.Table.registry){
+      var codes=Object.keys(FormUI.Table.registry||{});
+      if(codes[0]){
+        var ok=FormUI.reloadTable(codes[0], {q:'demo'});
+        log('reloadTable', codes[0], ok);
+      } else log('reloadTable: no tables registered');
+    }
+  });
+  */
+
+  jQuery('#linkClearLog').on('click', function(e){
+    e.preventDefault();
+    jQuery('#log').text('');
+  });
+
+  // initial render
+  try{ renderFromKey('code_common'); }catch(e){}
+})();
+</script>
+</body>
+</html>

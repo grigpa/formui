@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FormUI Docs — 03: Валидация (Select2 v3.5)</title>
+
+  <!-- jQuery + Bootstrap 3 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
+
+  <!-- Select2 v3.5.x -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.4/select2.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.4/select2.min.js"></script>
+  <script>
+    // select2 availability check
+    window.__formui_select2_loaded = !!(window.jQuery && jQuery.fn && jQuery.fn.select2);
+  </script>
+
+  <style>
+    body { padding: 18px 0; }
+    .page-title { margin: 0 0 10px; }
+    .hint { color:#666; }
+    .tag { display:inline-block; padding: 2px 8px; background:#eef6ff; border:1px solid #d7e9ff; border-radius: 999px; font-size:12px; margin-right:6px; margin-bottom:4px; }
+    .kbd { display:inline-block; padding: 2px 6px; border:1px solid #ddd; border-bottom-width:2px; border-radius:6px; background:#fff; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+
+    .demo-wrap { background:#fafafa; border:1px solid #eee; border-radius: 10px; padding: 12px; }
+    .demo-actions { margin: 10px 0 0; clear: both; }
+    .demo-actions .btn { margin: 0 6px 6px 0; }
+    .log { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; background:#111; color:#d9ffd9; padding:10px; border-radius:8px; min-height: 90px; white-space: pre-wrap; }
+
+    /* Code view */
+    pre.codeview{
+      background:#0b1020; color:#d7e1ff; border:0; border-radius: 10px;
+      padding: 12px; overflow:auto; position: relative;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    pre.codeview:hover { outline: 2px solid rgba(0,120,255,.15); }
+    pre.codeview .badge-edit{
+      position:absolute; top:10px; right:10px;
+      background:#ffffff; color:#333; border:1px solid #ddd;
+    }
+
+    /* Inline editor */
+    .editor-wrap { display:none; margin-bottom: 10px; }
+    textarea.codebox{
+      width: 100%;
+      min-height: 260px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      border-radius: 10px;
+      border: 1px solid #e5e5e5;
+      padding: 10px;
+      background: #fff;
+    }
+    .editor-actions .btn { margin-right: 6px; margin-bottom: 6px; }
+
+    /* Fix Bootstrap floats inside FormUI rows */
+    .formui-row:before, .formui-row:after { content:" "; display: table; }
+    .formui-row:after { clear: both; }
+    #demoMount { overflow: auto; }
+
+    /* Slot cosmetics */
+    .form-ui-slot-title{ font-weight: 600; margin: 0 0 8px; }
+    .form-ui-slot-body{ padding: 10px; border:1px dashed #ddd; border-radius: 10px; background:#fff; }
+
+    /* Optional: disabled labels */
+    .formui-disabled-label{ opacity: .55; }
+
+    /* Custom widget style in demo */
+    .demo-card{ padding:10px; border:1px solid #e5e5e5; border-radius:10px; background:#fff; }
+    .demo-card strong{ font-size: 13px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+      <h2 class="page-title">FormUI Docs — 03: Валидация (accordion, inline edit, Select2 v3.5)</h2>
+      <div class="hint">
+        <span class="tag">Загрузка</span> core → fields → layout → select2 → values → validation → events → helpers → render → modal → facade<br/>
+        <span class="tag">Контракт</span>
+        <span class="kbd">hidden</span>, <span class="kbd">slot.title</span>, <span class="kbd">slot.actions</span>,
+        <span class="kbd">table</span> (QueryTable move), <span class="kbd">validateGroup</span> — зафиксированы<br/>
+        <span class="tag">UX</span> Код показывается как <span class="kbd">&lt;pre&gt;</span>, редактирование — по Edit/клику, Apply обновляет preview, Render demo рендерит слева
+      </div>
+      <hr/>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-7 col-xs-12">
+      <h4>Живое демо</h4>
+      <div class="demo-wrap">
+        <div id="demoMount"></div>
+        <div class="clearfix"></div>
+
+        <div class="demo-actions">
+          <button class="btn btn-primary btn-sm" id="btnGetValues">FormUI.getValues()</button>
+          <button class="btn btn-default btn-sm" id="btnSetValues">FormUI.setValues(sample)</button>
+          <button class="btn btn-default btn-sm" id="btnClearValues">FormUI.clearValues()</button>
+          <button class="btn btn-warning btn-sm" id="btnValidate">FormUI.validate()</button>
+          <button class="btn btn-default btn-sm" id="btnValidateGroup">validateGroup(demoGroup)</button>
+          <button class="btn btn-default btn-sm" id="btnToggleHidden">toggle(hiddenDemo)</button>
+<!--          <button class="btn btn-default btn-sm" id="btnReloadTable">reloadTable()</button>-->
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="hint">Лог (<a href="#" id="linkClearLog">очистить</a>):</div>
+          <div id="log" class="log"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5 col-xs-12">
+      <h4>Как устроена страница</h4>
+      <ul class="hint">
+        <li>Каждая секция аккордеона — один <span class="kbd">type: 'something'</span> (или группа близких типов), с разбором и runnable-примером.</li>
+        <li>Код секции обязан задать: <span class="kbd">fields</span>, <span class="kbd">layout</span>, <span class="kbd">actions</span>, <span class="kbd">options</span></li>
+        <li><span class="kbd">layout.rows</span> не ограничивает набор полей — “rest” дорисовывается автоматически.</li>
+        <li>Для Select2 включай <span class="kbd">options.select2=true</span>.</li>
+        <li><span class="kbd">hidden:true</span> — design-time; runtime: <span class="kbd">FormUI.hide/show/toggle/isVisible</span>.</li>
+        <li>Table runtime: <span class="kbd">FormUI.getTable(code)</span>, <span class="kbd">FormUI.reloadTable(code, params)</span>, <span class="kbd">FormUI.reloadTableByField(container, fieldId)</span>.</li>
+      </ul>
+      <div class="hint">Подсказка: сломал пример — жми <span class="kbd">Reset</span> в секции.</div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true"></div>
+</div>
+
+<!-- FormUI modules -->
+<script src="./core.js"></script>
+<script src="./fields.js"></script>
+<script src="./layout.js"></script>
+<script src="./select2.js"></script>
+<script src="./values.js"></script>
+<script src="./validation.js"></script>
+<script src="./events.js"></script>
+<script src="./helpers.js"></script>
+<script src="./render.js"></script>
+<script src="./modal.js"></script>
+<script src="./facade.js"></script>
+
+<script>
+(function(){
+  // -----------------------
+  // 1) Sections (accordion)
+  // -----------------------
+  var SECTIONS = [
+    { n:'00', key:'code_common', title:'Общий контракт валидации: required / validators / validate()' },
+    { n:'01', key:'code_required', title:'required: сообщения и поведение для разных типов' },
+    { n:'02', key:'code_email', title:"Email: type='email' + валидатор email" },
+    { n:'03', key:'code_pattern', title:'Регулярка: validator pattern (RegExp / строка)' },
+    { n:'04', key:'code_minmax', title:'minLen / maxLen: строки и textarea' },
+    { n:'05', key:'code_number_range', title:'min / max: числа + input type=number' },
+    { n:'06', key:'code_custom_inline', title:'Кастомный validator как функция (inline)' },
+    { n:'07', key:'code_register_validator', title:'registerValidator: свой тип валидатора + параметры' },
+    { n:'08', key:'code_async', title:'Async validator: Promise + защита от stale результата' },
+    { n:'09', key:'code_stop_on_first', title:'stopOnFirstError: несколько validators на поле' },
+    { n:'10', key:'code_show_errors', title:'showErrors:false: получить результат без подсветки' },
+    { n:'11', key:'code_validate_field', title:'validateField: валидируем одно поле' },
+    { n:'12', key:'code_validate_group', title:'validateGroup: проверка только выбранной группы layout' },
+    // { n:'13', key:'code_set_errors', title:'setErrors / clearErrors: серверные ошибки' },
+    { n:'13', key:'code_validate_on_blur', title:'validateOnBlurFields: подсветка на blur (и для select2 v3.5)' },
+    { n:'14', key:'code_hidden_clear', title:'hidden + clearErrors: скрываем поле и чистим ошибки' }
+  ];
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function buildPanel(i, sec){
+    var hid = 'h_' + sec.key;
+    var cid = 'c_' + sec.key;
+    var expanded = sec.open ? 'true' : 'false';
+    var inClass = sec.open ? 'in' : '';
+    var html = ''
+      + '<div class="panel panel-default">'
+      +   '<div class="panel-heading" role="tab" id="'+hid+'">'
+      +     '<h4 class="panel-title">'
+      +       '<a role="button" data-toggle="collapse" data-parent="#accordion" href="#'+cid+'" aria-expanded="'+expanded+'">'
+      +         esc(sec.n + '. ' + sec.title)
+      +       '</a>'
+      +     '</h4>'
+      +   '</div>'
+      +   '<div id="'+cid+'" class="panel-collapse collapse '+inClass+'">'
+      +     '<div class="panel-body">'
+      +       '<div class="hint" id="desc_'+sec.key+'" style="margin:0 0 10px"></div>'
+      +       '<pre class="codeview" id="codePreview_'+sec.key+'"><span class="badge badge-edit">Click to edit</span><code id="codeText_'+sec.key+'"></code></pre>'
+      +       '<div class="editor-wrap" id="editor_'+sec.key+'">'
+      +         '<textarea class="codebox" id="codeInput_'+sec.key+'"></textarea>'
+      +         '<div class="editor-actions">'
+      +           '<button class="btn btn-success btn-sm js-apply" data-code="'+sec.key+'">Apply</button>'
+      +           '<button class="btn btn-default btn-sm js-cancel" data-code="'+sec.key+'">Cancel</button>'
+      +           '<button class="btn btn-link btn-sm js-reset" data-code="'+sec.key+'">Reset</button>'
+      +         '</div>'
+      +       '</div>'
+      +       '<div style="margin-top:8px">'
+      +         '<button class="btn btn-default btn-sm js-edit" data-code="'+sec.key+'">Edit</button>'
+      +         '<button class="btn btn-primary btn-sm js-render" data-code="'+sec.key+'">Render demo</button>'
+      +       '</div>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
+    return html;
+  }
+
+  // -----------------------
+  // 2) Default examples
+  // -----------------------
+  var DEFAULTS = {
+    code_common: [
+`// Минимальный контракт валидации в FormUI:
+// 1) required: true + requiredMessage
+// 2) validators: [{type:'minLen', value:3}, ...] ИЛИ function(value, ctx){...}
+// 3) FormUI.validate(container, flatten(fields), { showErrors:true }) -> Promise({ok, values, fields})
+var fields = [
+  { id:'name', type:'text', label:'Имя', required:true, requiredMessage:'Введите имя' },
+  { id:'email', type:'email', label:'Email', required:true },
+  { id:'about', type:'textarea', label:'О себе', validators:[{type:'maxLen', value:120}] }
+];
+
+var layout = 1;
+
+var actions = [
+  { id:'btnValidate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log('validate result', r); });
+    }
+  }
+];
+
+// Важно: для select2 v3.5 у нас отдельный guard внутренних input'ов (s2id_autogen*),
+// поэтому validate()/validateGroup() не «ловит» лишние скрытые поля.
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_required: [
+`// required: текст / textarea / checkbox / radios / checkboxes / select2
+var fields = [
+  { id:'t1', type:'text', label:'Текст (required)', required:true, requiredMessage:'Заполните поле' },
+  { id:'ta1', type:'textarea', label:'Textarea (required)', required:true },
+  { id:'c1', type:'checkbox', label:'Согласие (required)', required:true, requiredMessage:'Нужно согласиться' },
+  { id:'r1', type:'radios', label:'Radios (required)', required:true, options:[
+    {value:'a', text:'A'}, {value:'b', text:'B'}
+  ]},
+  { id:'cbg', type:'checkboxes', label:'Checkboxes (min 1)', required:true, options:[
+    {value:'x', text:'X'}, {value:'y', text:'Y'}
+  ]},
+  { id:'s1', type:'select', label:'Select (required)', required:true, options:[
+    {value:'', text:'— выберите —'}, {value:'ru', text:'RU'}, {value:'en', text:'EN'}
+  ]},
+  { id:'s2', type:'select2', label:'Select2 v3.5 (required)', required:true, options:[
+    {value:'1', text:'One'}, {value:'2', text:'Two'}
+  ]}
+];
+
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['t1','ta1','c1','r1','cbg','s1','s2'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_email: [
+`// Email — два варианта:
+// A) type:'email' (HTML5 + наш validator email)
+// B) type:'text' + validators:[{type:'email'}]
+var fields = [
+  { id:'e1', type:'email', label:'Email (type=email)', required:true },
+  { id:'e2', type:'text', label:'Email (validator)', validators:[{type:'email', message:'Некорректный email'}] }
+];
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['e1','e2'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_pattern: [
+`// pattern: RegExp или строка (будет new RegExp(str))
+// Пример: только латиница, цифры, подчёркивание, 3..12 символов
+var fields = [
+  { id:'login', type:'text', label:'Login', validators:[
+    { type:'pattern', value:/^[A-Za-z0-9_]{3,12}$/, message:'3..12 символов: A-Z, 0-9, _' }
+  ]},
+  { id:'code', type:'text', label:'Код (строкой)', validators:[
+    { type:'pattern', value:'^[0-9]{4}$', message:'Ровно 4 цифры' }
+  ]}
+];
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['login','code'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_minmax: [
+`// minLen / maxLen: строки
+var fields = [
+  { id:'short', type:'text', label:'minLen=3', validators:[{type:'minLen', value:3}] },
+  { id:'bio', type:'textarea', label:'maxLen=50', attrs:{rows:3}, validators:[{type:'maxLen', value:50}] },
+  { id:'both', type:'text', label:'3..6', validators:[
+    {type:'minLen', value:3, message:'Минимум 3'},
+    {type:'maxLen', value:6, message:'Максимум 6'}
+  ]}
+];
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['short','bio','both'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_number_range: [
+`// min/max: числа (type:number) + validators
+var fields = [
+  { id:'age', type:'number', label:'Возраст (18..99)', validators:[
+    {type:'min', value:18, message:'Минимум 18'},
+    {type:'max', value:99, message:'Максимум 99'}
+  ]},
+  { id:'qty', type:'number', label:'Количество (>=1)', required:true, validators:[{type:'min', value:1}] }
+];
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['age','qty'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_custom_inline: [
+`// Inline validator как функция
+// Возврат:
+// - true -> ok
+// - false -> некорректно (сообщение по умолчанию)
+// - string -> сообщение об ошибке
+// - {ok:true|false, message:'...'} -> расширенный формат
+var fields = [
+  { id:'slug', type:'text', label:'Slug (lowercase + -)', validators:[
+    function(v){
+      if(v==null || v==='') return true; // пустое допустимо
+      var s = String(v);
+      if(!/^[a-z0-9-]+$/.test(s)) return 'Только lowercase, цифры и дефис';
+      if(s.indexOf('--') >= 0) return { ok:false, message:'Двойной дефис запрещён' };
+      return true;
+    }
+  ]}
+];
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['slug'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_register_validator: [
+`// registerValidator: свой тип + параметры
+FormUI.registerValidator('startsWith', function(value, ctx, params){
+  if(value==null || value==='') return true;
+  var s = String(value);
+  var pref = (params && params.value != null) ? String(params.value) : '';
+  if(!pref) return true;
+  return s.indexOf(pref) === 0 || (params && params.message) || ('Должно начинаться с: ' + pref);
+});
+
+var fields = [
+  { id:'code', type:'text', label:"startsWith('A')", validators:[
+    { type:'startsWith', value:'A', message:"Должно начинаться с 'A'" }
+  ]}
+];
+
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['code'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_async: [
+`// Async validator: Promise.
+// В validation.js есть validateToken по field.id — защищает от "stale" результатов
+// (когда пользователь быстро меняет значение, а старый promise заканчивается позже).
+function asyncEmailCheck(value){
+  return new Promise(function(resolve){
+    setTimeout(function(){
+      var s = String(value||'').toLowerCase();
+      if(!s) return resolve(true);
+      if(s === 'taken@example.com') return resolve('Этот email уже занят');
+      resolve(true);
+    }, 350);
+  });
+}
+
+var fields = [
+  { id:'email', type:'email', label:'Async email', required:true, validators:[ asyncEmailCheck ] }
+];
+
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log('async validate', r); });
+    }
+  }
+];
+var options = { bindEvents:true, validateOnBlurFields:['email'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_stop_on_first: [
+`// stopOnFirstError: true (по умолчанию) — останавливаемся на первой ошибке в поле
+// stopOnFirstError:false — пробуем все валидаторы и возвращаем последнее сообщение
+var fields = [
+  { id:'v', type:'text', label:'Несколько validators', validators:[
+    {type:'minLen', value:3, message:'Мин 3'},
+    {type:'pattern', value:/^[A-Z]+$/, message:'Только A..Z'},
+    {type:'maxLen', value:6, message:'Макс 6'}
+  ]}
+];
+
+var layout = 1;
+var actions = [
+  { id:'validate1', text:'validate(stop=true)', class:'btn btn-warning',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true, stopOnFirstError:true})
+        .then(function(r){ console.log('stop=true', r); });
+    }
+  },
+  { id:'validate2', text:'validate(stop=false)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true, stopOnFirstError:false})
+        .then(function(r){ console.log('stop=false', r); });
+    }
+  }
+];
+
+var options = { bindEvents:true, validateOnBlurFields:['v'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_show_errors: [
+`// showErrors:false — получить результат без DOM-подсветки.
+// Удобно, если вы хотите показать ошибки в своём UI (toast / summary и т.п.)
+var fields = [
+  { id:'a', type:'text', label:'Required', required:true },
+  { id:'b', type:'text', label:'minLen=3', validators:[{type:'minLen', value:3}] }
+];
+var layout = 1;
+var actions = [
+  { id:'validateNoUI', text:'validate(showErrors:false)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:false})
+        .then(function(r){
+          console.log('no ui', r);
+          alert('ok=' + r.ok + JSON.stringify(r.fields, null, 2));
+        });
+    }
+  },
+  { id:'validateUI', text:'validate(showErrors:true)', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_validate_field: [
+`// validateField: проверяем одно поле (и подсвечиваем только его)
+var fields = [
+  { id:'one', type:'text', label:'minLen=3', validators:[{type:'minLen', value:3}] },
+  { id:'two', type:'text', label:'required', required:true }
+];
+var layout = 1;
+
+var actions = [
+  { id:'v1', text:'validateField(one)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validateField('#demoMount', {id:'one'}, FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log('field one', r); });
+    }
+  },
+  { id:'v2', text:'validateField(two)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validateField('#demoMount', 'two', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log('field two', r); });
+    }
+  },
+  { id:'va', text:'validate(all)', class:'btn btn-warning',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log('all', r); });
+    }
+  }
+];
+
+var options = { bindEvents:true, validateOnBlurFields:['one','two'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_validate_group: [
+`// validateGroup: проверяем только поля внутри group layout
+var fields = [
+  { id:'g1', type:'text', label:'В группе (required)', required:true },
+  { id:'g2', type:'text', label:'В группе (minLen=3)', validators:[{type:'minLen', value:3}] },
+  { id:'x1', type:'text', label:'Снаружи (required, но не валидируем в validateGroup)', required:true }
+];
+
+var layout = {
+  rows:[
+    { type:'group', id:'demoGroup', class:'panel panel-default', rows:[
+      1,
+      ['g2']
+    ]},
+    1,
+    ['x1']
+  ]
+};
+
+var actions = [
+  { id:'vg', text:'validateGroup(demoGroup)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validateGroup('#demoMount', FormUI.Fields.flatten(fields), 'demoGroup', {showErrors:true})
+        .then(function(r){ console.log('validateGroup', r); });
+    }
+  },
+  { id:'va', text:'validate(all)', class:'btn btn-warning',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log('validate(all)', r); });
+    }
+  }
+];
+
+var options = { bindEvents:true, validateOnBlurFields:['g1','g2','x1'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n'),
+
+    code_set_errors: [
+`// setErrors / clearErrors — сценарий "сервер вернул ошибки"
+// Можно поставить ошибки на любые поля: text/select/radios/checkboxes/select2.
+var fields = [
+  { id:'email', type:'email', label:'Email', required:true },
+  { id:'role', type:'select2', label:'Role (select2 v3.5)', options:[
+    {value:'dev', text:'Developer'}, {value:'qa', text:'QA'}
+  ]},
+  { id:'agree', type:'checkbox', label:'Agree', required:true }
+];
+
+var layout = 1;
+
+var actions = [
+  { id:'serverErr', text:'setErrors()', class:'btn btn-danger',
+    onClick:function(){
+      FormUI.setErrors('#demoMount', {
+        email: 'Email уже используется',
+        role: 'Недопустимая роль',
+        agree: 'Нужно согласиться'
+      });
+    }
+  },
+  { id:'clear', text:'clearErrors()', class:'btn btn-default',
+    onClick:function(){ FormUI.clearErrors('#demoMount'); }
+  },
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+
+var options = { bindEvents:true };`
+    ].join('\n'),
+
+    code_validate_on_blur: [
+`// validateOnBlurFields: подсветка при уходе с поля (blur/change)
+// В events.js есть поддержка для select2 v3.5: слушаем change на исходном hidden/select
+var fields = [
+  { id:'a', type:'text', label:'required', required:true },
+  { id:'b', type:'text', label:'minLen=3', validators:[{type:'minLen', value:3}] },
+  { id:'s2', type:'select2', label:'select2 (required)', required:true, options:[
+    {value:'', text:''},
+    {value:'1', text:'One'},
+    {value:'2', text:'Two'}
+  ]}
+];
+
+var layout = 1;
+var actions = [
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+
+// validateOnBlurOptions пробрасываются в validateField()
+var options = {
+  bindEvents:true,
+  validateOnBlurFields:['a','b','s2'],
+  validateOnBlurOptions:{ showErrors:true, stopOnFirstError:true }
+};`
+    ].join('\n'),
+
+    code_hidden_clear: [
+`// hidden + clearErrors
+// API: field.hidden (sugar) -> attrs.style='display:none' + data-formui-hidden
+// Helpers.hide/show/toggle/isVisible работают на уровне bootstrap-col wrapper.
+var fields = [
+  { id:'hiddenDemo', type:'text', label:'Скрываемое поле', required:true, hidden:true },
+  { id:'x', type:'text', label:'Обычное (required)', required:true }
+];
+
+var layout = 1;
+var actions = [
+  { id:'toggle', text:'toggle(hiddenDemo)', class:'btn btn-default',
+    onClick:function(){ FormUI.Helpers.toggle('#demoMount', 'hiddenDemo', {clearErrors:true}); }
+  },
+  { id:'validate', text:'validate()', class:'btn btn-warning',
+    onClick:function(){ FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true}); }
+  }
+];
+
+var options = { bindEvents:true, validateOnBlurFields:['hiddenDemo','x'], validateOnBlurOptions:{showErrors:true} };`
+    ].join('\n')
+  };
+  // descriptions shown above code
+  var DESCR = {
+    code_common:
+      '<div><span class="tag">Минимум</span> fields/layout/actions/options + render. Тут же видны required/validateOnBlur.</div>',
+    code_text:
+      '<div class="hint"><b>Поддержка:</b> любые input types (по сути, всё кроме спец-типов). ' +
+      'Используй <span class="kbd">placeholder</span>, <span class="kbd">attrs</span>, <span class="kbd">validators</span>, <span class="kbd">onChange</span>.</div>',
+    code_textarea:
+      '<div class="hint">Textarea — как input, плюс <span class="kbd">attrs:{rows:n}</span>.</div>',
+    code_select:
+      '<div class="hint">Native select: <span class="kbd">options</span> = строки или {value,text,selected,attrs}.</div>',
+    code_select2:
+      '<div class="hint">Select2 v3.5: включи <span class="kbd">options.select2=true</span>. Для multiple: <span class="kbd">attrs:{multiple:true}</span>.</div>',
+    code_select2_ajax:
+      '<div class="hint"><b>select2-ajax</b> — это hidden input, а поведение задаётся <span class="kbd">field.select2</span>. ' +
+      'В проде часто используют <span class="kbd">FormUI.createAjaxSelect</span> (ajax на сервер). Здесь runnable-версия через <span class="kbd">query</span>.</div>',
+    code_checkbox:
+      '<div class="hint">Single checkbox: getValues -> boolean, setValues -> boolean.</div>',
+    code_checkboxes:
+      '<div class="hint">Group checkboxes: getValues -> массив значений, setValues -> массив. DOM связывание через <span class="kbd">data-formui-group</span>.</div>',
+    code_radios:
+      '<div class="hint">Group radios: getValues -> одно значение (string) или null, setValues -> string.</div>',
+    code_button:
+      '<div class="hint">type:button — просто кнопка в сетке. Удобно задавать <span class="kbd">attrs.onclick</span>.</div>',
+    code_label:
+      '<div class="hint">Read-only: обновляется через <span class="kbd">setValues({id:...})</span> (внутри используется узел <span class="kbd">id__value</span>).</div>',
+    code_custom:
+      '<div class="hint">Custom renderer: <span class="kbd">render(field, ctx)</span> возвращает DOM/текст. '+
+      'setValues умеет обновлять non-input элементы (text/html/class/style/color).</div>',
+    code_slot:
+      '<div class="hint">Slot = вложенная сетка. Заголовок — <span class="kbd">title</span>. ' +
+      'Внутри — свои <span class="kbd">actions</span> и <span class="kbd">actionsAlign</span>.</div>',
+    code_table:
+      '<div class="hint">Table = QueryTable mount. При наличии QueryTable — move DOM и init один раз (избежать DataTables reinit).</div>',
+    code_layout_groups:
+      '<div class="hint">layout.rows: числа (N колонок), массивы id, группы и fieldset. ' +
+      'EMPTY: <span class="kbd">FormUI.EMPTY</span> создаёт пустую ячейку.</div>',
+    code_validation:
+      '<div class="hint">required + validators (sync/async). ' +
+      'validateOnBlur показывает ошибки при уходе с поля.</div>',
+    code_validate_group:
+      '<div class="hint">validateGroup(container, fields, groupId): валидирует только поля внутри DOM-группы.</div>',
+    code_values_disable:
+      '<div class="hint">setDisable — одиночное поле/группа. setDisabled — bulk. clearDisabled — включить всё обратно.</div>',
+    code_events_map:
+      '<div class="hint">field.events: мапа событий, полезно для keyup/keydown/input и т.д.</div>',
+    code_hidden:
+      '<div class="hint">hidden:true скрывает bootstrap-колонку (label+control). Runtime: hide/show/toggle/isVisible.</div>',
+    code_modal:
+      '<div class="hint">Bootstrap modal + FormUI.Modal. Внутри модалки можно рендерить отдельную форму.</div>'
+  };
+
+  // ------------------------------------
+  // 3) Inline editor + render orchestrator
+  // ------------------------------------
+  var current = {};
+  Object.keys(DEFAULTS).forEach(function(k){ current[k]=DEFAULTS[k]; });
+
+  // Build panels
+  var $acc = jQuery('#accordion');
+  SECTIONS.forEach(function(sec, idx){
+    $acc.append(buildPanel(idx, sec));
+  });
+
+  // Fill descriptions and previews
+  SECTIONS.forEach(function(sec){
+    var key = sec.key;
+    jQuery('#desc_'+key).html(DESCR[key] || '');
+    refreshPreview(key);
+  });
+
+  var $log = jQuery('#log');
+  function log(){
+    var s = Array.prototype.slice.call(arguments).map(function(x){
+      try { return (typeof x === 'string') ? x : JSON.stringify(x, null, 2); }
+      catch(e){ return String(x); }
+    }).join(' ');
+    $log.text(($log.text() ? ($log.text() + "\n") : "") + s);
+    $log.scrollTop($log[0].scrollHeight);
+  }
+
+  function compileExample(code){
+    var fn = new Function('FormUI','jQuery','$','"use strict";\n'+
+      'var fields=null, layout=1, actions=null, options={select2:true, bindEvents:true};\n'+
+      code+'\n'+
+      'return {fields:fields, layout:layout, actions:actions, options:options};'
+    );
+    return fn(window.FormUI, window.jQuery, window.jQuery);
+  }
+
+  function renderFromKey(key){
+    var code = current[key];
+    var mount = '#demoMount';
+    var ex = compileExample(code);
+    window.__currentDemo = ex;
+    if(!ex || !Array.isArray(ex.fields)) throw new Error('Example must define: var fields = [ ... ];');
+    FormUI.render(mount, ex.fields, ex.layout || 1, ex.actions || null, ex.options || {}, 'md');
+    log('[render]', key);
+  }
+
+  function refreshPreview(key){
+    jQuery('#codeText_'+key).text(current[key]||'');
+  }
+
+  function openEditor(key){
+    jQuery('#codeInput_'+key).val(current[key]||'');
+    jQuery('#editor_'+key).slideDown(120);
+    setTimeout(function(){ var el=jQuery('#codeInput_'+key)[0]; if(el) el.focus(); },0);
+  }
+
+  function closeEditor(key){
+    jQuery('#editor_'+key).slideUp(120);
+  }
+
+  // Click on pre opens editor
+  jQuery(document).on('click','pre.codeview',function(){
+    var id=jQuery(this).attr('id')||'';
+    var key=id.replace('codePreview_','');
+    if(DEFAULTS[key]!=null) openEditor(key);
+  });
+
+  jQuery(document).on('click','.js-edit',function(){ openEditor(jQuery(this).data('code')); });
+  jQuery(document).on('click','.js-apply',function(){
+    var key=jQuery(this).data('code');
+    current[key]=jQuery('#codeInput_'+key).val();
+    refreshPreview(key); closeEditor(key); log('[apply]',key);
+  });
+  jQuery(document).on('click','.js-cancel',function(){
+    closeEditor(jQuery(this).data('code')); log('[cancel]');
+  });
+  jQuery(document).on('click','.js-reset',function(e){
+    e.preventDefault();
+    var key=jQuery(this).data('code');
+    current[key]=DEFAULTS[key]||'';
+    refreshPreview(key);
+    jQuery('#codeInput_'+key).val(current[key]);
+    log('[reset]',key);
+  });
+  jQuery(document).on('click','.js-render',function(){
+    var key=jQuery(this).data('code');
+    try{ renderFromKey(key); }catch(e){ log('[error]',key,e.message||String(e)); }
+  });
+
+  // Top actions
+  jQuery('#btnGetValues').on('click',function(){ log('getValues:', FormUI.getValues('#demoMount')); });
+  jQuery('#btnSetValues').on('click',function(){
+    FormUI.setValues('#demoMount',{
+      name:'Paul', bio:'Some text...', role:'pm',
+      email:'test@example.com', age:33, pwd:'1234',
+      msg:'Hello from textarea',
+      city:'irk',
+      tags:['ui','ml'],
+      userId:{id:'4', text:'Paul'},
+      agree:true,
+      langs:['ru','en'],
+      paymentType:'sbp',
+      status:{text:'OK', color:'#3c763d'},
+      req:'X',
+      minmax:'abcd',
+      pref:'A123',
+      email2:'free@example.com',
+      g1:'ok', g2:'abc',
+      d1:'x', d2:'B', d3:true,
+      live:'typing...',
+      hiddenDemo:'secret', b:'visible', c:'toggle me',
+      mName:'Paul', mRole:'Dev'
+    });
+    log('setValues(sample) done');
+  });
+  jQuery('#btnClearValues').on('click',function(){ FormUI.clearValues('#demoMount'); log('clearValues done'); });
+  jQuery('#btnValidate').on('click',function(){
+    try{
+      var ex = window.__currentDemo || null;
+      if(!ex || !Array.isArray(ex.fields)){
+        log('validate: current demo not rendered yet');
+        return;
+      }
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(ex.fields), {showErrors:true})
+        .then(function(res){ log('validate result:', res); });
+    }catch(e){ log('validate error', e.message||String(e)); }
+  });
+  jQuery('#btnValidateGroup').on('click',function(){
+    try{
+      var ex = window.__currentDemo || null;
+      if(!ex || !Array.isArray(ex.fields)){
+        log('validateGroup: current demo not rendered yet');
+        return;
+      }
+      var root = document.querySelector('#demoMount');
+      var has = root && root.querySelector('#demoGroup');
+      if(!has){ log('validateGroup: demoGroup not present in current demo'); return; }
+      FormUI.validateGroup('#demoMount', FormUI.Fields.flatten(ex.fields), 'demoGroup', {showErrors:true})
+        .then(function(r){ log('validateGroup result:', r); });
+    }catch(e){ log('validateGroup error', e.message||String(e)); }
+  });
+  jQuery('#btnToggleHidden').on('click',function(){
+    try{
+      if(FormUI.toggle) FormUI.toggle('#demoMount','hiddenDemo');
+      log('toggle(hiddenDemo)');
+    }catch(e){ log('toggle error', e.message||String(e)); }
+  });
+  /*
+  jQuery('#btnReloadTable').on('click',function(){
+    if(FormUI.Table && FormUI.Table.registry){
+      var codes=Object.keys(FormUI.Table.registry||{});
+      if(codes[0]){
+        var ok=FormUI.reloadTable(codes[0], {q:'demo'});
+        log('reloadTable', codes[0], ok);
+      } else log('reloadTable: no tables registered');
+    }
+  });
+  */
+
+  jQuery('#linkClearLog').on('click', function(e){
+    e.preventDefault();
+    jQuery('#log').text('');
+  });
+
+  // initial render
+  try{ renderFromKey('code_common'); }catch(e){}
+})();
+</script>
+</body>
+</html>

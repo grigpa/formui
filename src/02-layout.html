@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FormUI Docs — 02: Layout (inline edit)</title>
+
+  <!-- jQuery + Bootstrap 3 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
+
+  <!-- Select2 v3.5.x -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@3.5.4/select2.css" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@3.5.4/select2.min.js"></script>
+
+  <style>
+    body { padding: 18px 0; }
+    .page-title { margin: 0 0 10px; }
+    .hint { color:#666; }
+    .tag { display:inline-block; padding: 2px 8px; background:#eef6ff; border:1px solid #d7e9ff; border-radius: 999px; font-size:12px; margin-right:6px; margin-bottom:4px; }
+    .kbd { display:inline-block; padding: 2px 6px; border:1px solid #ddd; border-bottom-width:2px; border-radius:6px; background:#fff; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+
+    .demo-wrap { background:#fafafa; border:1px solid #eee; border-radius: 10px; padding: 12px; }
+    .demo-actions { margin: 10px 0 0; clear: both; }
+    .demo-actions .btn { margin: 0 6px 6px 0; }
+    .log { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; background:#111; color:#d9ffd9; padding:10px; border-radius:8px; min-height: 90px; white-space: pre-wrap; }
+
+    /* Code view */
+    pre.codeview{
+      background:#0b1020; color:#d7e1ff; border:0; border-radius: 10px;
+      padding: 12px; overflow:auto; position: relative;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    pre.codeview:hover { outline: 2px solid rgba(0,120,255,.15); }
+    pre.codeview .badge-edit{
+      position:absolute; top:10px; right:10px;
+      background:#ffffff; color:#333; border:1px solid #ddd;
+    }
+
+    /* Inline editor */
+    .editor-wrap { display:none; margin-bottom: 10px; }
+    textarea.codebox{
+      width: 100%;
+      min-height: 240px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      border-radius: 10px;
+      border: 1px solid #e5e5e5;
+      padding: 10px;
+      background: #fff;
+    }
+    .editor-actions .btn { margin-right: 6px; margin-bottom: 6px; }
+
+    /* Fix Bootstrap floats inside FormUI rows */
+    .formui-row:before, .formui-row:after { content:" "; display: table; }
+    .formui-row:after { clear: both; }
+    #demoMount { overflow: auto; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+      <h2 class="page-title">FormUI Docs — 02: Layout (inline edit)</h2>
+      <div class="hint">
+        <span class="tag">Загрузка</span> core → fields → layout → select2 → values → validation → events → helpers → render → modal → facade<br/>
+        <span class="tag">Контракт</span> <span class="kbd">hidden</span>, <span class="kbd">slot</span>, <span class="kbd">table</span> (QueryTable move), <span class="kbd">validateGroup</span> — зафиксированы<br/>
+        <span class="tag">UX</span> Код показывается как <span class="kbd">&lt;pre&gt;</span>, редактирование — по Edit/клику, Apply обновляет preview, Render demo рендерит слева
+      </div>
+      <hr/>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-7 col-xs-12">
+      <h4>Живое демо</h4>
+      <div class="demo-wrap">
+        <div id="demoMount"></div>
+        <div class="clearfix"></div>
+
+        <div class="demo-actions">
+          <button class="btn btn-primary btn-sm" id="btnGetValues">FormUI.getValues()</button>
+          <button class="btn btn-default btn-sm" id="btnSetValues">FormUI.setValues(sample)</button>
+          <button class="btn btn-default btn-sm" id="btnClearValues">FormUI.clearValues()</button>
+          <button class="btn btn-warning btn-sm" id="btnValidate">FormUI.validate()</button>
+<!--          <button class="btn btn-default btn-sm" id="btnReloadTable">reloadTable()</button>-->
+          
+        </div>
+
+        
+<div style="margin-top:10px">
+  <div class="hint">Лог (<a href="#" id="linkClearLog">очистить</a>):</div>
+  <div id="log" class="log"></div>
+</div>
+
+      </div>
+    </div>
+
+    <div class="col-md-5 col-xs-12">
+      <h4>Правила для кода</h4>
+      <ul class="hint">
+        <li>Код должен задать: <span class="kbd">fields</span>, <span class="kbd">layout</span>, <span class="kbd">actions</span>, <span class="kbd">options</span></li>
+        <li><span class="kbd">layout.rows</span> не ограничивает набор полей — “rest” дорисовывается</li>
+        <li>Для select2/select2-ajax нужен <span class="kbd">options.select2=true</span></li>
+        <li><span class="kbd">hidden:true</span> — design-time; runtime: <span class="kbd">FormUI.hide/show/toggle/isVisible</span></li>
+<!--        <li>Table runtime: <span class="kbd">FormUI.getTable(code)</span>, <span class="kbd">FormUI.reloadTable(code, params)</span>, <span class="kbd">FormUI.reloadTableByField(container, fieldId)</span></li>-->
+      </ul>
+      <div class="hint">Подсказка: сломал пример — жми <span class="kbd">Reset</span> в секции.</div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h0">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c0" aria-expanded="true">
+            00. Layout overview: number vs rows
+          </a>
+        </h4>
+      </div>
+      <div id="c0" class="panel-collapse collapse in">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_overview"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_overview"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_overview">
+            <textarea class="codebox" id="codeInput_code_layout_overview"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_overview">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_overview">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_overview">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_overview">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_overview">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h1">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c1" aria-expanded="false">
+            01. layout = N (auto grid)
+          </a>
+        </h4>
+      </div>
+      <div id="c1" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_number"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_number"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_number">
+            <textarea class="codebox" id="codeInput_code_layout_number"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_number">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_number">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_number">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_number">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_number">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h2">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c2" aria-expanded="false">
+            02. layout.rows = [2,3,1] (numbers)
+          </a>
+        </h4>
+      </div>
+      <div id="c2" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_rows_numbers"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_rows_numbers"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_rows_numbers">
+            <textarea class="codebox" id="codeInput_code_layout_rows_numbers"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_rows_numbers">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_rows_numbers">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_rows_numbers">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_rows_numbers">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_rows_numbers">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h3">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c3" aria-expanded="false">
+            03. layout.rows = [['id','id'], ...] (explicit by id)
+          </a>
+        </h4>
+      </div>
+      <div id="c3" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_rows_ids"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_rows_ids"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_rows_ids">
+            <textarea class="codebox" id="codeInput_code_layout_rows_ids"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_rows_ids">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_rows_ids">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_rows_ids">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_rows_ids">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_rows_ids">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h4">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c4" aria-expanded="false">
+            04. FormUI.EMPTY (empty cells / alignment)
+          </a>
+        </h4>
+      </div>
+      <div id="c4" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_empty"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_empty"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_empty">
+            <textarea class="codebox" id="codeInput_code_layout_empty"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_empty">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_empty">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_empty">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_empty">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_empty">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h5">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c5" aria-expanded="false">
+            05. row.type='group' (+ validateGroup)
+          </a>
+        </h4>
+      </div>
+      <div id="c5" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_group"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_group"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_group">
+            <textarea class="codebox" id="codeInput_code_layout_group"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_group">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_group">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_group">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_group">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_group">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h6">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c6" aria-expanded="false">
+            06. row.type='fieldset' (+ legend + id)
+          </a>
+        </h4>
+      </div>
+      <div id="c6" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_fieldset"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_fieldset"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_fieldset">
+            <textarea class="codebox" id="codeInput_code_layout_fieldset"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_fieldset">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_fieldset">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_fieldset">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_fieldset">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_fieldset">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h7">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c7" aria-expanded="false">
+            07. Nested group/fieldset
+          </a>
+        </h4>
+      </div>
+      <div id="c7" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_nested"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_nested"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_nested">
+            <textarea class="codebox" id="codeInput_code_layout_nested"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_nested">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_nested">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_nested">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_nested">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_nested">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h8">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c8" aria-expanded="false">
+            08. Rest fields auto-appended
+          </a>
+        </h4>
+      </div>
+      <div id="c8" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_rest"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_rest"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_rest">
+            <textarea class="codebox" id="codeInput_code_layout_rest"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_rest">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_rest">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_rest">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_rest">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_rest">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="h9">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#c9" aria-expanded="false">
+            09. Mixed columns per row
+          </a>
+        </h4>
+      </div>
+      <div id="c9" class="panel-collapse collapse">
+        <div class="panel-body">
+          <pre class="codeview" id="codePreview_code_layout_mixed_cols"><span class="badge badge-edit">Click to edit</span><code id="codeText_code_layout_mixed_cols"></code></pre>
+          <div class="editor-wrap" id="editor_code_layout_mixed_cols">
+            <textarea class="codebox" id="codeInput_code_layout_mixed_cols"></textarea>
+            <div class="editor-actions">
+              <button class="btn btn-success btn-sm js-apply" data-code="code_layout_mixed_cols">Apply</button>
+              <button class="btn btn-default btn-sm js-cancel" data-code="code_layout_mixed_cols">Cancel</button>
+              <button class="btn btn-link btn-sm js-reset" data-code="code_layout_mixed_cols">Reset</button>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <button class="btn btn-default btn-sm js-edit" data-code="code_layout_mixed_cols">Edit</button>
+            <button class="btn btn-primary btn-sm js-render" data-code="code_layout_mixed_cols">Render demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+</div>
+</div>
+
+<!-- FormUI modules -->
+<script src="./core.js"></script>
+<script src="./fields.js"></script>
+<script src="./layout.js"></script>
+<script src="./select2.js"></script>
+<script src="./values.js"></script>
+<script src="./validation.js"></script>
+<script src="./events.js"></script>
+<script src="./helpers.js"></script>
+<script src="./render.js"></script>
+<script src="./modal.js"></script>
+<script src="./facade.js"></script>
+
+<script>
+(function(){
+    var DEFAULTS = {
+    code_layout_overview: `var fields = [
+  { id:'name', label:'Имя', type:'text', required:true },
+  { id:'email', label:'Email', type:'email', required:true,
+    validators:[ { type:'minLen', value:6, message:'Минимум 6 символов' } ] },
+  { id:'role', label:'Роль', type:'select', options:[
+    {value:'dev', text:'Developer'},
+    {value:'pm', text:'PM'},
+    {value:'qa', text:'QA'}
+  ] },
+  { id:'note', label:'Заметка', type:'textarea', attrs:{rows:3} }
+];
+
+var layout = 2;
+
+var actions = [
+  { id:'log', text:'Log values', class:'btn btn-default',
+    onClick:function(){ console.log('values', FormUI.getValues('#demoMount')); } },
+  { id:'toggleEmail', text:'toggle(email)', class:'btn btn-default',
+    onClick:function(){ FormUI.toggle('#demoMount','email'); } }
+];
+
+var options = {
+  select2:false,
+  bindEvents:true,
+  validateOnBlurFields:['name','email'],
+  validateOnBlurOptions:{showErrors:true}
+};`,
+    code_layout_number: `var fields = [
+  { id:'a', label:'A', type:'text', placeholder:'text' },
+  { id:'b', label:'B', type:'number', value: 42 },
+  { id:'c', label:'C', type:'date' },
+  { id:'d', label:'D', type:'textarea', value:'Hello', attrs:{rows:2} },
+  { id:'e', label:'E', type:'select', options:[{value:'1',text:'One'},{value:'2',text:'Two'}] },
+  { id:'f', label:'F', type:'checkbox', checked:true }
+];
+
+var layout = 3;
+
+var actions = [
+  { id:'act1', text:'Log values', class:'btn btn-default',
+    onClick:function(){ console.log('values', FormUI.getValues('#demoMount')); } }
+];
+
+var options = { select2:false, bindEvents:true };`,
+    code_layout_rows_numbers: `var fields = [
+  { id:'firstName', label:'First name', type:'text', required:true },
+  { id:'lastName', label:'Last name', type:'text', required:true },
+  { id:'email', label:'Email', type:'email', required:true },
+  { id:'age', label:'Age', type:'number' },
+  { id:'city', label:'City', type:'text' },
+  { id:'agree', label:'I agree', type:'checkbox' }
+];
+
+var layout = {
+  rows: [
+    2,
+    3,
+    1
+  ]
+};
+
+var actions = [
+  { id:'val', text:'Validate', class:'btn btn-primary',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log(r); alert('ok=' + r.ok); });
+    } }
+];
+
+var options = { bindEvents:true, select2:false };`,
+    code_layout_rows_ids: `var fields = [
+  { id:'q', label:'Search query', type:'text' },
+  { id:'from', label:'From', type:'date' },
+  { id:'to', label:'To', type:'date' },
+  { id:'status', label:'Status', type:'select', options:[
+    {value:'NEW',text:'NEW'},{value:'DONE',text:'DONE'},{value:'ERR',text:'ERR'}
+  ] },
+  { id:'owner', label:'Owner', type:'text' },
+  { id:'priority', label:'Priority', type:'select', options:[
+    {value:'1',text:'Low'},{value:'2',text:'Normal'},{value:'3',text:'High'}
+  ] }
+];
+
+var layout = {
+  rows: [
+    ['q', 'status'],
+    ['from','to','priority'],
+    ['owner']
+  ]
+};
+
+var actions = [
+  { id:'print', text:'Print values', class:'btn btn-default',
+    onClick:function(){ console.log(FormUI.getValues('#demoMount')); } }
+];
+
+var options = {};`,
+    code_layout_empty: `var fields = [
+  { id:'x1', label:'X1', type:'text' },
+  { id:'x2', label:'X2', type:'text' },
+  { id:'x3', label:'X3', type:'text' },
+  { id:'run', type:'button', text:'Run', btnClass:'btn btn-success',
+    onClick:function(){ alert('Run'); } }
+];
+
+var layout = {
+  rows: [
+    ['x1','x2','x3'],
+    [FormUI.EMPTY, FormUI.EMPTY, 'run']
+  ]
+};
+
+var actions = null;
+var options = { bindEvents:true };`,
+    code_layout_group: `var fields = [
+  { id:'g_name', label:'Name', type:'text', required:true },
+  { id:'g_email', label:'Email', type:'email', required:'Email required' },
+  { id:'g_age', label:'Age', type:'number' },
+  { id:'outside', label:'Outside field', type:'text' }
+];
+
+var layout = {
+  rows: [
+    {
+      type:'group',
+      id:'profileGroup',
+      class:'profile-group',
+      attrs:{ style:'background:#fff;' },
+      rows: [
+        ['g_name','g_email'],
+        ['g_age']
+      ]
+    },
+    ['outside']
+  ]
+};
+
+var actions = [
+  { id:'vg', text:'validateGroup(profileGroup)', class:'btn btn-primary',
+    onClick:function(){
+      FormUI.validateGroup('#demoMount', FormUI.Fields.flatten(fields), 'profileGroup', {showErrors:true})
+        .then(function(r){ console.log(r); alert('validateGroup ok=' + r.ok); });
+    } },
+  { id:'va', text:'validate(all)', class:'btn btn-default',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log(r); alert('validate ok=' + r.ok); });
+    } }
+];
+
+var options = { bindEvents:true };`,
+    code_layout_fieldset: `var fields = [
+  { id:'fs_login', label:'Login', type:'text', required:true },
+  { id:'fs_pass', label:'Password', type:'password', required:true },
+  { id:'fs_rem', label:'Remember', type:'checkbox' },
+  { id:'fs_note', label:'Note', type:'textarea', attrs:{rows:2} }
+];
+
+var layout = {
+  rows: [
+    {
+      type:'fieldset',
+      id:'authFieldset',
+      legend:'Auth',
+      class:'my-auth',
+      rows: [
+        ['fs_login','fs_pass'],
+        ['fs_rem', FormUI.EMPTY],
+        ['fs_note']
+      ]
+    }
+  ]
+};
+
+var actions = [
+  { id:'val', text:'Validate', class:'btn btn-primary',
+    onClick:function(){
+      FormUI.validate('#demoMount', FormUI.Fields.flatten(fields), {showErrors:true})
+        .then(function(r){ console.log(r); alert('ok=' + r.ok); });
+    } }
+];
+
+var options = { bindEvents:true };`,
+    code_layout_nested: `var fields = [
+  { id:'n1', label:'First', type:'text' },
+  { id:'n2', label:'Second', type:'text' },
+  { id:'n3', label:'Third', type:'text' },
+  { id:'n4', label:'Fourth', type:'text' },
+  { id:'n5', label:'Fifth', type:'text' }
+];
+
+var layout = {
+  rows: [
+    {
+      type:'fieldset',
+      id:'fsOuter',
+      legend:'Outer fieldset',
+      rows: [
+        {
+          type:'group',
+          id:'grpInner',
+          class:'inner-group',
+          rows: [
+            ['n1','n2'],
+            {
+              type:'fieldset',
+              id:'fsInner',
+              legend:'Inner fieldset',
+              rows: [
+                ['n3','n4']
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    ['n5']
+  ]
+};
+
+var actions = null;
+var options = { bindEvents:true };`,
+    code_layout_rest: `var fields = [
+  { id:'u1', label:'Used 1', type:'text' },
+  { id:'u2', label:'Used 2', type:'text' },
+  { id:'xtra1', label:'Extra 1 (not in rows)', type:'text' },
+  { id:'xtra2', label:'Extra 2 (not in rows)', type:'text' },
+  { id:'xtra3', label:'Extra 3 (not in rows)', type:'text' }
+];
+
+var layout = {
+  rows: [
+    ['u1','u2']
+  ]
+};
+
+var actions = [
+  { id:'hideExtra2', text:'hide(xtra2)', class:'btn btn-default',
+    onClick:function(){ FormUI.hide('#demoMount','xtra2'); } }
+];
+
+var options = { bindEvents:true };`,
+    code_layout_mixed_cols: `var fields = [
+  { id:'wide', label:'Wide (1 col)', type:'text' },
+  { id:'a', label:'A', type:'text' },
+  { id:'b', label:'B', type:'text' },
+  { id:'c', label:'C', type:'text' },
+  { id:'tail', label:'Tail', type:'text' }
+];
+
+var layout = {
+  rows: [
+    ['wide'],
+    ['a','b','c'],
+    ['tail']
+  ]
+};
+
+var actions = [
+  { id:'toggleWide', text:'toggle(wide)', class:'btn btn-default',
+    onClick:function(){ FormUI.toggle('#demoMount','wide'); } }
+];
+
+var options = { bindEvents:true };`
+  };
+
+  var current = {};
+  Object.keys(DEFAULTS).forEach(function(k){ current[k]=DEFAULTS[k]; });
+
+  var $log = jQuery('#log');
+  function log(){
+    var s = Array.prototype.slice.call(arguments).map(function(x){
+      try { return (typeof x === 'string') ? x : JSON.stringify(x, null, 2); }
+      catch(e){ return String(x); }
+    }).join(' ');
+    $log.text(($log.text() ? ($log.text() + "\n") : "") + s);
+    $log.scrollTop($log[0].scrollHeight);
+  }
+
+  function compileExample(code){
+    var fn = new Function('FormUI','jQuery','$','"use strict";\n'+
+      'var fields=null, layout=1, actions=null, options={select2:true, bindEvents:true};\n'+
+      code+'\n'+
+      'return {fields:fields, layout:layout, actions:actions, options:options};'
+    );
+    return fn(window.FormUI, window.jQuery, window.jQuery);
+  }
+
+  function renderFromKey(key){
+    var code = current[key];
+    var mount = '#demoMount';
+    var ex = compileExample(code);
+    if(!ex || !Array.isArray(ex.fields)) throw new Error('Example must define: var fields = [ ... ];');
+    FormUI.render(mount, ex.fields, ex.layout || 1, ex.actions || null, ex.options || {}, 'md');
+    log('[render]', key);
+  }
+
+  function refreshPreview(key){
+    jQuery('#codeText_'+key).text(current[key]||'');
+  }
+
+  function openEditor(key){
+    jQuery('#codeInput_'+key).val(current[key]||'');
+    jQuery('#editor_'+key).slideDown(120);
+    setTimeout(function(){ var el=jQuery('#codeInput_'+key)[0]; if(el) el.focus(); },0);
+  }
+
+  function closeEditor(key){
+    jQuery('#editor_'+key).slideUp(120);
+  }
+
+  Object.keys(DEFAULTS).forEach(function(key){ refreshPreview(key); });
+
+  jQuery(document).on('click','pre.codeview',function(){
+    var id=jQuery(this).attr('id')||'';
+    var key=id.replace('codePreview_','');
+    if(DEFAULTS[key]!=null) openEditor(key);
+  });
+
+  jQuery(document).on('click','.js-edit',function(){ openEditor(jQuery(this).data('code')); });
+  jQuery(document).on('click','.js-apply',function(){
+    var key=jQuery(this).data('code');
+    current[key]=jQuery('#codeInput_'+key).val();
+    refreshPreview(key); closeEditor(key); log('[apply]',key);
+  });
+  jQuery(document).on('click','.js-cancel',function(){
+    closeEditor(jQuery(this).data('code')); log('[cancel]');
+  });
+  jQuery(document).on('click','.js-reset',function(e){
+    e.preventDefault();
+    var key=jQuery(this).data('code');
+    current[key]=DEFAULTS[key]||'';
+    refreshPreview(key);
+    jQuery('#codeInput_'+key).val(current[key]);
+    log('[reset]',key);
+  });
+  jQuery(document).on('click','.js-render',function(){
+    var key=jQuery(this).data('code');
+    try{ renderFromKey(key); }catch(e){ log('[error]',key,e.message||String(e)); }
+  });
+
+  jQuery('#btnGetValues').on('click',function(){ log('getValues:', FormUI.getValues('#demoMount')); });
+  jQuery('#btnSetValues').on('click',function(){
+    // Build sample values for the CURRENTLY rendered fields (so it works for any demo)
+    var cur = {};
+    try{
+      // some builds support includeHidden option; ignore if not
+      cur = FormUI.getValues('#demoMount', { includeHidden:true }) || {};
+    }catch(e){
+      cur = FormUI.getValues('#demoMount') || {};
+    }
+
+    var sample = {};
+    Object.keys(cur).forEach(function(id){
+      var low = String(id).toLowerCase();
+      if (low.indexOf('email') !== -1) sample[id] = 'test@example.com';
+      else if (low.indexOf('date') !== -1 || low.indexOf('from') !== -1 || low.indexOf('to') !== -1) sample[id] = '2026-01-23';
+      else if (low.indexOf('age') !== -1 || low.indexOf('count') !== -1 || low.indexOf('num') !== -1 || low.indexOf('qty') !== -1 || low.indexOf('amount') !== -1 || low.indexOf('price') !== -1) sample[id] = 1;
+      else if (low.indexOf('agree') !== -1 || low.indexOf('check') !== -1 || low.indexOf('enabled') !== -1 || low.indexOf('active') !== -1 || low.indexOf('rem') !== -1) sample[id] = true;
+      else if (cur[id] === true || cur[id] === false) sample[id] = true;
+      else sample[id] = 'Sample ' + id;
+    });
+
+    FormUI.setValues('#demoMount', sample);
+    log('setValues(sample) done', sample);
+  });
+  jQuery('#btnClearValues').on('click',function(){ FormUI.clearValues('#demoMount'); log('clearValues done'); });
+  jQuery('#btnValidate').on('click',function(){
+    var vals=FormUI.getValues('#demoMount');
+    var f=Object.keys(vals).map(function(id){ return {id:id}; });
+    FormUI.validate('#demoMount',f,{showErrors:true}).then(function(res){ log('validate result:',res); });
+  });
+  /*
+  jQuery('#btnReloadTable').on('click',function(){
+    if(FormUI.Table && FormUI.Table.registry){
+      var codes=Object.keys(FormUI.Table.registry||{});
+      if(codes[0]){
+        var ok=FormUI.reloadTable(codes[0], {q:'demo'});
+        log('reloadTable', codes[0], ok);
+      } else log('reloadTable: no tables registered');
+    }
+  });
+  */
+
+
+  jQuery('#btnClearLog, #btnClearLog2').on('click', function(){
+    jQuery('#log').text('');
+  });
+  jQuery('#btnTestLog').on('click', function(){
+    log('[test]', { time: new Date().toISOString(), message: 'hello log' });
+  });
+
+
+  jQuery('#linkClearLog').on('click', function(e){
+    e.preventDefault();
+    jQuery('#log').text('');
+  });
+
+
+  try{ renderFromKey('code_layout_overview'); }catch(e){}
+})();
+</script>
+</body>
+</html>
